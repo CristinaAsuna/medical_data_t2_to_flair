@@ -1,13 +1,16 @@
-# Lower bounds only. Pin exact versions with `pip freeze` once the cluster env is built (docs/PIPELINE.md).
-# Install torch separately with the CUDA build matching the cluster driver.
-torch>=2.1
-diffusers>=0.27
-monai>=1.3
-lpips>=0.1.4
-torchmetrics>=1.3
-nibabel>=5.2
-scipy>=1.11
-numpy>=1.26
-pyyaml>=6.0
-matplotlib>=3.8
-kaggle>=1.6
+# Exact versions of the cluster env (envs/t2flair, Python 3.12.13), locked 2026-11-24.
+# The cluster is CentOS 7 / glibc 2.17: install with the command in docs/PIPELINE.md (Environment),
+# which only accepts wheels built for manylinux_2_17. torch 2.6.0 from PyPI is the CUDA 12.4 build.
+torch==2.6.0
+torchvision==0.21.0
+diffusers==0.43.0
+monai==1.5.2
+lpips==0.1.4
+torchmetrics==1.9.0
+nibabel==5.5.0
+scipy==1.16.3
+numpy==2.2.6
+pyyaml==6.0.4
+matplotlib==3.11.2
+kaggle==2.2.5
+six==1.17.0  # kaggle imports it but does not declare it

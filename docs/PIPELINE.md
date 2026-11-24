@@ -7,7 +7,8 @@
 ## 环境
 
 - mac：`/Users/max/codebase/.ml/.venv/bin/python`，只做编码、L0 测试和不超过 5 分钟的 CPU smoke；不放数据。
-- cluster：`<work_root>/envs/t2flair`（uv 建的 venv，torch 的 CUDA 版本按集群驱动选择），用 `pip install -r requirements.txt` 安装。确切版本装好后用 `pip freeze` 锁进 requirements.txt。
+- cluster：`/public_bme2/bme-cuizhm/maxquan/envs/t2flair`（uv venv，Python 3.12.13，torch 2.6.0+cu124）；项目在 `/public_bme2/bme-cuizhm/maxquan/Projects/medical_data_t2_to_flair`。集群是 CentOS 7 / glibc 2.17，只能装 manylinux_2_17 的预编译包，在登录节点运行：
+  `uv pip install --python <env>/bin/python --python-platform x86_64-manylinux_2_17 --only-binary :all: -r requirements.txt`
 - 每次运行前先 `source tools/env.sh`；集群作业脚本的第一条命令也是它。
 
 ## 1. 准备数据
