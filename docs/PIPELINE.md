@@ -2,7 +2,7 @@
 
 永久文档，上限 120 行。只在命令或接口变化时改写。每一步写一条可以直接运行的命令。
 
-> 状态：接口已定，代码尚未实现（等主干卡片批准）。下面的命令是约定的接口，实现时按此对齐；改动接口要同步改这里。
+> 所有命令在项目根目录运行，先 `source tools/env.sh`（它把 `src/` 加进 PYTHONPATH）。集群作业脚本在 `tools/jobs/`，日志写到 `scratch/slurm/`（提交前 `mkdir -p scratch/slurm`）。L0 测试：`python -m pytest tests -q`（含合成数据的端到端 smoke）。
 
 ## 环境
 
@@ -14,8 +14,10 @@
 ## 1. 准备数据
 
 ```bash
-python -m t2flair.splits --data $LAB_DATA_DIR/brats2021 --out configs/splits      # 生成 main_* 和 lit_* 两套 ID 列表（只需一次）
-python -m t2flair.prep --data $LAB_DATA_DIR/brats2021 --split configs/splits/main --out $LAB_DATA_DIR/brats2021/processed/main
+python -m t2flair.splits --subjects <每行一个 ID 的文件> --out configs/splits   # 已生成并提交（1251 例），不要重跑
+sbatch tools/jobs/prep.sbatch main    # bme_cpu：解压 tar 中的 t2/flair/seg 到 raw/（只做一次），再运行
+# python -m t2flair.prep --raw $LAB_DATA_DIR/brats2021/raw --splits configs/splits/main --protocol main \
+#     --out $LAB_DATA_DIR/brats2021/processed/main --workers 16
 ```
 
 ## 2. 训练
@@ -24,21 +26,28 @@ python -m t2flair.prep --data $LAB_DATA_DIR/brats2021 --split configs/splits/mai
 python -m t2flair.train --config configs/trunk.yaml                                   # 主干 F1
 python -m t2flair.train --config configs/trunk.yaml --exp configs/exp/<id>.yaml       # 实验：只覆盖差异
 python -m t2flair.train_seg --config configs/trunk.yaml --role {s_train,s_eval}       # 分割器（各训一次，所有实验共用）
+# 集群：sbatch -p bme_a10080g --gres=gpu:NVIDIAA10080GBPCIe:1 -J <名称> tools/jobs/gpu.sbatch "train --config configs/trunk.yaml"
 ```
+
+- 产物：`runs/<exp>/model/`（生成器），`runs/<seg.runs_exp>/{s_train,s_eval}/`（分割器），各含 `log.jsonl` 和 `checkpoints/{last,best}.pt`；中断后同一命令从 last.pt 续训。
 
 ## 3. 推理
 
 ```bash
-python -m t2flair.infer --run runs/<id> --split val --steps 50 --seed 0
+python -m t2flair.infer --config configs/trunk.yaml [--exp ...] --split val --steps 50 --seed 0
 ```
 
-- 输出写到 `runs/<id>/samples/<split>-steps<N>-seed<S>/`，每个受试者一个 `.npz`。同一组 checkpoint、划分、步数和种子只生成一次，已存在就跳过。
+- 输出写到 `runs/_cache/samples/<key 哈希>/`（`artifacts.cache_dir`，key = exp、best.pt 的指标、划分、步数、种子、σ），每个受试者一个 `.npz`。同一组 key 只生成一次，已完成就跳过。
 
 ## 4. 评测（唯一入口）
 
 ```bash
-python -m t2flair.evaluate --run runs/<id> --split val --steps 50 --seed 0 --out experiments/<id>/result.json
+python -m t2flair.evaluate --config configs/trunk.yaml [--exp ...] --split val --steps 50 --seed 0 \
+    --out experiments/<id>/result.json --run-id <lab run id>
+python -m t2flair.figures --config configs/trunk.yaml --out experiments/<id>/figures   # train_curve.png、val_samples.png
 ```
+
+- LPIPS 用 AlexNet 权重，需事先在登录节点下载到 `$LAB_MODELS_DIR/torch`（计算节点不能联网）。
 
 - 评测集：开发阶段用 `main_val`（30 例）；`main_test`（100 例）冻结，只在最终报告时评测一次（D-003）。
 - 主指标（全部先按受试者求值，再在受试者之间取均值±标准差）：

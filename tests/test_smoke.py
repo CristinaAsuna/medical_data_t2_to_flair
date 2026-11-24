@@ -1,0 +1,58 @@
+"""End-to-end smoke on synthetic 64x64 volumes: train -> train_seg -> infer -> evaluate -> figures.
+
+Outputs go to scratch/smoke/ and a temporary PROJECT_RUNS_ROOT; nothing lands in runs/.
+"""
+import json
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+import numpy as np
+import pytest
+
+from t2flair import prep
+from tests.test_core import synthetic_volume
+
+ROOT = Path(__file__).resolve().parents[1]
+EXP = "smoke-e2e"
+
+
+def run(module, *args, env):
+    cmd = [sys.executable, "-m", "t2flair." + module, *args]
+    subprocess.run(cmd, cwd=ROOT, env=env, check=True)
+
+
+def test_end_to_end(tmp_path):
+    pytest.importorskip("diffusers")
+    processed = tmp_path / "processed"
+    processed.mkdir()
+    ids = {"train": ["BraTS2021_9000%d" % i for i in range(4)], "val": ["BraTS2021_90010", "BraTS2021_90011"],
+           "test": ["BraTS2021_90020"]}
+    for n, (name, subjects) in enumerate(ids.items()):
+        (tmp_path / ("smoke_%s.txt" % name)).write_text("\n".join(subjects) + "\n")
+        for j, subject in enumerate(subjects):
+            arrays, _ = prep.process_arrays(*synthetic_volume(size=80, depth=16, seed=10 * n + j), crop=64)
+            np.savez_compressed(processed / (subject + ".npz"), **arrays)
+    env = dict(os.environ, PYTHONPATH=str(ROOT / "src"), PROJECT_RUNS_ROOT=str(tmp_path / "runs"))
+    sets = ["exp=%s" % EXP, "data.processed=%s" % processed, "data.splits=%s" % (tmp_path / "smoke"),
+            "data.crop=64", "model.base_channels=16", "model.channel_mult=[1,2,2,4]", "model.layers_per_block=1",
+            "train.steps=6", "train.batch_size=4", "train.num_workers=0", "train.log_every=2", "train.val_every=3",
+            "train.val_subjects=2", "train.val_slices_per_subject=3", "train.val_steps=2",
+            "seg.runs_exp=%s" % EXP, "seg.steps=4", "seg.batch_size=4", "seg.val_every=2",
+            "seg.s_eval.arch=tiny", "seg.s_train.arch=tiny", "eval.lpips=false"]
+    common = ["--set", *sets, "--smoke"]
+    run("train", *common, env=env)
+    run("train", *common, env=env)  # resumes from last.pt and stops immediately
+    run("train_seg", "--role", "s_eval", *common, env=env)
+    run("infer", "--split", "val", "--steps", "3", *common, env=env)
+    out = tmp_path / "result.json"
+    run("evaluate", "--split", "val", "--steps", "3", "--out", str(out), *common, env=env)
+    result = json.loads(out.read_text())
+    assert result["eval_set"] == "main_val"
+    assert result["metrics"]["model"]["psnr"]["n"] == 2
+    assert "dice" in result["baseline"]["upper_bound_real_flair"]
+    run("figures", "--steps", "3", "--out", str(tmp_path / "figs"), *common, env=env)
+    assert (tmp_path / "figs" / "train_curve.png").exists() and (tmp_path / "figs" / "val_samples.png").exists()
+    log = (ROOT / "scratch" / "smoke" / EXP / "model" / "log.jsonl").read_text().splitlines()
+    assert any(json.loads(line).get("event") == "val" for line in log)

@@ -11,6 +11,8 @@ export CUDA_CACHE_PATH="$_cache/cuda"
 export XDG_CACHE_HOME="$_cache/xdg"
 export PIP_CACHE_DIR="$_cache/pip"
 export PYTHONDONTWRITEBYTECODE=1
+# 让 `python -m t2flair.<模块>` 在项目根目录下可用，不需要安装包。
+export PYTHONPATH="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")/.." && pwd)/src${PYTHONPATH:+:$PYTHONPATH}"
 
 if [ -n "${LAB_MODELS_DIR:-}" ]; then
   export HF_HOME="$LAB_MODELS_DIR/huggingface"

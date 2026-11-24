@@ -1,2 +1,58 @@
 # 当前主干的完整配置。只有"主干迁移"才能改这个文件（见 AGENTS.md §7）。
 # 实验写成 configs/exp/<实验 id>.yaml，只列相对本文件的差异。
+# 路径里的 ${VAR} 在读取时用环境变量展开。数据契约见 docs/DATA.md。
+
+exp: 2026-11-24-trunk-bridge-fm
+
+data:
+  processed: ${LAB_DATA_DIR}/brats2021/processed/main   # t2flair.prep 的输出
+  splits: configs/splits/main                            # main_{train,val,test}.txt
+  crop: 192
+
+model:                      # diffusers UNet2DModel；192 输入下各级分辨率 192/96/48/24
+  base_channels: 64
+  channel_mult: [1, 2, 4, 8]
+  layers_per_block: 2
+  attn_levels: [2, 3]       # 48×48 和 24×24 处加自注意力
+
+method:
+  name: bridge              # F1：从中间切片的 T2 出发的布朗桥 FM（D-002）
+  sigma: 0.5
+
+train:
+  steps: 100000
+  batch_size: 64
+  lr: 1.0e-4
+  warmup: 1000
+  weight_decay: 0.0
+  ema: 0.9999
+  grad_clip: 1.0
+  bf16: true
+  num_workers: 8
+  seed: 0
+  log_every: 100
+  val_every: 5000           # 每次在 val 子集上采样，按脑区 PSNR 选 best.pt
+  val_subjects: 8
+  val_slices_per_subject: 16
+  val_steps: 10
+
+infer:
+  steps: 50
+  seed: 0
+
+seg:                        # 只在 main_train 的真实 FLAIR 上训练；单通道输入，输出 whole tumor 的 logit
+  runs_exp: 2026-11-24-trunk-bridge-fm   # 分割器只训一次，放在主干卡片的 runs/ 下，所有实验共用
+  steps: 20000
+  batch_size: 32
+  lr: 3.0e-4
+  val_every: 2000
+  s_train: {arch: basicunet, seed: 1}
+  s_eval: {arch: segresnet, seed: 2}
+  threshold: 0.5
+
+eval:
+  split: val
+  fp_dilate: 5              # 假阳性：P 中距 GT 超过 5 体素（3D 球形膨胀）的部分
+  small_lesion_voxels: 1000 # GT 连通域 < 1000 体素（约 1 mL）记为小病灶
+  empty_slice_tau: 20       # 无肿瘤切片上预测超过 20 像素记为误报
+  lpips: true
