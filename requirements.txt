@@ -1,0 +1,13 @@
+# Lower bounds only. Pin exact versions with `pip freeze` once the cluster env is built (docs/PIPELINE.md).
+# Install torch separately with the CUDA build matching the cluster driver.
+torch>=2.1
+diffusers>=0.27
+monai>=1.3
+lpips>=0.1.4
+torchmetrics>=1.3
+nibabel>=5.2
+scipy>=1.11
+numpy>=1.26
+pyyaml>=6.0
+matplotlib>=3.8
+kaggle>=1.6

@@ -1,0 +1,5 @@
+Upstream: https://github.com/Master-cai/Research-Paper-Writing-Skills
+Path in upstream: research-paper-writing/ (plus top-level LICENSE, MIT)
+Commit: 77e7c2c1ba06f7d71844873147665437a03aac1b
+Copied: 2026-11-24
+Local changes: none. Course-specific changes go elsewhere (see docs/DECISIONS.md D-004).
