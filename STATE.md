@@ -26,6 +26,10 @@ F1 端到端在 main_val 上的 PSNR，以及病灶 Dice 与上界的差各是�
 
 数据与环境：BraTS 2021 tar 已在 cluster `$LAB_DATA_DIR/brats2021/`（sha256 已核对，见 MACHINES.md）；环境见 PIPELINE.md。
 
+## 下一步（当前卡片，在 cluster 上执行）
+
+代码已完成并在 Mac 上通过 11 个测试（commit 见 git log）；集群上还没跑任何作业。按 docs/PIPELINE.md §5 的 0→5 顺序做：LPIPS 权重 → 预处理 → 真实数据 smoke（停下汇报 it/s 和耗时估算）→ F1 与分割器正式训练 → val 推理与评测 → 填卡片结果，等用户核对。
+
 ## 搁置的想法
 
 做当前卡片时想到的其他实验写在这里，一行一条，不执行。

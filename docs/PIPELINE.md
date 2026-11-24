@@ -51,10 +51,26 @@ python -m t2flair.figures --config configs/trunk.yaml --out experiments/<id>/fig
 
 - 评测集：开发阶段用 `main_val`（30 例）；`main_test`（100 例）冻结，只在最终报告时评测一次（D-003）。
 - 主指标（全部先按受试者求值，再在受试者之间取均值±标准差）：
-  - 画质：PSNR（dB，↑）、SSIM（↑）、MAE（↓）、LPIPS（↓），都只在脑区 mask 内计算，取值范围按 [-1,1] → [0,1] 换算。
+  - 画质：PSNR（dB，↑）、SSIM（↑）、MAE（↓）只在脑区 mask 内计算，取值范围按 [-1,1] → [0,1] 换算；LPIPS（↓）按整张切片计算（AlexNet，输入 [-1,1]）。
   - 病灶：用 S_eval 分割合成的 FLAIR，得到预测掩膜 P；同一 S_eval 分割真实 FLAIR 得到 P_real（上界）；GT 掩膜为 G。报告 Dice(P,G)、HD95、假阳性体积 |P \ dilate(G,5px)|、漏检率 1−|P∩G|/|G|、小病灶召回，以及无肿瘤切片误报率。
 - 必须对比的基线：恒等基线（直接输出中间切片的 T2）在同一入口上的数值；真实 FLAIR 上 S_eval 的 Dice（上界）。
-- 统计：实验之间用按受试者配对的 Wilcoxon 检验，并报配对差的 95% bootstrap 置信区间。
+- 统计：实验之间用按受试者配对的 Wilcoxon 检验，并报配对差的 95% bootstrap 置信区间（读两份 result.json 的 per_subject；第一张消融卡片时实现，主干卡片不需要）。
 - 输出：`experiments/<id>/result.json`
 
 所有实验都用这一条命令评测，结果才能互相比较。不另写评测脚本。
+
+## 5. 在集群上执行主干卡片（2026-11-24-trunk-bridge-fm）
+
+项目根：`/public_bme2/bme-cuizhm/maxquan/Projects/medical_data_t2_to_flair`；环境：`/public_bme2/bme-cuizhm/maxquan/envs/t2flair`。登录节点只做 git、下载和 sbatch，单个进程不超过 1 小时；计算全走 Slurm。同时最多 2 个作业、3 张 GPU（bme-cluster）。每一步执行前按 AGENTS.md §8 告知并等确认。
+
+0. 登录节点：`git pull && mkdir -p scratch/slurm && source tools/env.sh && source <环境>/bin/activate`，然后 `python -c "import lpips; lpips.LPIPS(net='alex', verbose=False)"` 下载 AlexNet 到 `$LAB_MODELS_DIR/torch`，登记总台 MACHINES.md。
+1. 预处理：`sbatch tools/jobs/prep.sbatch main`。验收：`processed/main/manifest.json` 中 counts 为 300/30/100，`max_tumor_lost_by_crop` < 0.01（否则停下汇报）。
+2. 真实数据 smoke（`bme_gpu`，约 20 分钟，产物只在 scratch/）：
+   `sbatch -p bme_gpu --gres=gpu:NVIDIAA10080GBPCIe:1 -J t2f-smoke tools/jobs/gpu.sbatch "train --smoke --set train.steps=300 train.val_every=150 train.log_every=50" "train_seg --role s_eval --smoke --set seg.steps=300 seg.val_every=300" "infer --smoke --split val --steps 5" "evaluate --smoke --split val --steps 5 --out scratch/smoke/result_smoke.json" "figures --smoke --steps 5 --out scratch/smoke/figures"`
+   验收：无报错、loss 下降、val_psnr 有限；用 `scratch/smoke/<exp>/model/log.jsonl` 的 time 字段算 it/s，估算 100k 步耗时。超过卡片预算 1.5 倍就停下问用户。
+3. 正式运行（两个作业并行；每个提交后立即 `lab run start 2026-11-24-trunk-bridge-fm --job <作业号> -- "<同一命令>"`）：
+   - `sbatch -p bme_a10080g --gres=gpu:NVIDIAA10080GBPCIe:1 -J t2f-f1 tools/jobs/gpu.sbatch "train --config configs/trunk.yaml"`
+   - `sbatch -p bme_gpu --gres=gpu:NVIDIAA10080GBPCIe:1 -J t2f-seg tools/jobs/gpu.sbatch "train_seg --role s_eval" "train_seg --role s_train"`
+   作业中断就用同一命令重交（从 last.pt 续训）。结束后 `lab run end <run_id> --status done|failed --outputs cluster:<runs 路径>`。
+4. 两个都完成后：`sbatch -p <有空的 A100 分区> ... -J t2f-eval tools/jobs/gpu.sbatch "infer --split val --steps 50 --seed 0" "evaluate --split val --steps 50 --seed 0 --out experiments/2026-11-24-trunk-bridge-fm/result.json --run-id <run_id>" "figures --out experiments/2026-11-24-trunk-bridge-fm/figures"`，同样登记 lab run。
+5. 收尾：把 result.json 的数字填进卡片"结果"一节（与恒等基线和上界比较、写这个结果不能说明什么），更新 EXPERIMENTS.md 一行和 STATE.md，`tools/project.py check`，提交并 `lab sync`。状态保持 running，等用户核对后再改 done、按 AGENTS.md §7 锁 trunk-v1；不要自己评测 main_test。

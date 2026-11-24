@@ -23,6 +23,10 @@ from .splits import load_split
 def samples_dir(cfg, split, steps, seed, smoke=False):
     run = run_path(cfg, "model", smoke=smoke)
     best = json.loads((run / "checkpoints" / "best.json").read_text())
+    if smoke:  # smoke outputs stay in scratch/, never in runs/_cache (AGENTS.md §5)
+        path = run / "samples" / "{}-steps{}-seed{}".format(split, steps, seed)
+        path.mkdir(parents=True, exist_ok=True)
+        return path
     return artifacts.cache_dir("samples", exp=cfg["exp"], smoke=smoke, ckpt="best", ckpt_metric=best["metric"],
                                split=split, steps=steps, seed=seed, sigma=cfg["method"]["sigma"])
 
