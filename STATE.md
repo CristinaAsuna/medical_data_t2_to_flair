@@ -15,15 +15,16 @@
 
 ## 当前唯一问题
 
-F1 端到端在 main_val 上的 PSNR，以及病灶 Dice 与上界的差各是多少？→ 卡片：experiments/2026-11-24-trunk-bridge-fm/CARD.md（草稿，待批准）
+F1 端到端在 main_val 上的 PSNR，以及病灶 Dice 与上界的差各是多少？→ 卡片：experiments/2026-11-24-trunk-bridge-fm/CARD.md（running）
 
 ## 排队（最多 5 项）
 
-1. 集群准备：测空间、克隆仓库、建环境、用户放 kaggle.json 后下载 BraTS 2021（不是实验，用 lab log 记录）
-2. ablation：F0（从噪声出发）vs F1
-3. ablation：F1 + 病灶加权（α=5）
-4. ablation：F1 + 分割一致性
-5. 基线：UNet-L1、pix2pix、SelfRDB（在 main 划分上重训）
+1. ablation：F0（从噪声出发）vs F1
+2. ablation：F1 + 病灶加权（α=5）
+3. ablation：F1 + 分割一致性
+4. 基线：UNet-L1、pix2pix、SelfRDB（在 main 划分上重训）
+
+数据与环境：BraTS 2021 tar 已在 cluster `$LAB_DATA_DIR/brats2021/`（sha256 已核对，见 MACHINES.md）；环境见 PIPELINE.md。
 
 ## 搁置的想法
 
