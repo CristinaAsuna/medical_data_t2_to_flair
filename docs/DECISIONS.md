@@ -30,3 +30,8 @@
 - 决定：SelfRDB 官方代码和论文写作 skill（Master-cai/Research-Paper-Writing-Skills，MIT）原样放在 third_party/<名称>/，各带一个 UPSTREAM.txt，记录来源和 commit。
 - 理由：需要复现 SelfRDB 基线，并以写作 skill 为基础做课程要求的 Skill；模板的 Markdown 检查本来就豁免 third_party/，但根目录列表里没有它。
 - 影响：项目内的 tools/project.py 在 ROOT_DIRS 里加入 third_party；课程 Skill 的改动等写论文时另行决定放在哪里。
+
+## D-005 新增根目录 paper/ 放论文源文件（2026-11-25）
+- 决定：IEEE TMI 格式的论文（LaTeX、refs.bib、作图脚本、生成的图 PDF、作图用的小 JSON）放在 paper/；编译产物在 paper/build/，不进 git。
+- 理由：课程要求 TMI 论文；初步报告 v0 从现在开始就作为论文骨架，和代码、结果放在同一个版本里。
+- 影响：tools/project.py 的 ROOT_DIRS 加入 paper；论文里的数字只能来自 result.json、manifest 或已核对的文献。

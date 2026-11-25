@@ -23,6 +23,7 @@
 | 决策及理由 | docs/DECISIONS.md（每条 ≤5 行） |
 | 单个实验的问题、预测、结果 | experiments/<id>/CARD.md（≤40 行） |
 | 外部代码原样副本（SelfRDB、论文写作 skill），各带 UPSTREAM.txt | third_party/<名称>/（不改动；见 D-004） |
+| 论文 LaTeX 源文件、参考文献、作图脚本和图（编译产物在 paper/build/，不进 git） | paper/（D-005） |
 
 - 不新增其他 Markdown 文件。确实需要新的文件类型时，先问用户。
 - 同一条契约或结论只在一处写全，其他地方只引用。
@@ -44,7 +45,7 @@
 
 - 主干代码在 `src/t2flair/`。实验写成 `configs/exp/<id>.yaml`（只列相对 `configs/trunk.yaml` 的差异），必要时在 src 里加一个默认关闭的开关。不为一个实验新建包。
 - `experiments/<id>/` 里的脚本可以 import src；src 和其他实验都不能 import 它。
-- 项目根目录只有模板里的目录：src、configs、experiments、tests、tools、docs、scratch、runs、third_party（外部代码，D-004），可以再加一个指向数据的 data 链接。src 可以 import third_party，反过来不行。不为一个阶段或实验在根目录新建目录。
+- 项目根目录只有模板里的目录：src、configs、experiments、tests、tools、docs、scratch、runs、third_party（外部代码，D-004）、paper（论文，D-005），可以再加一个指向数据的 data 链接。src 可以 import third_party，反过来不行。不为一个阶段或实验在根目录新建目录。
 - 评测只用 docs/PIPELINE.md 写的那一个入口和那一个评测集。不另写评测脚本。更换评测集或主指标属于决策，要记进 docs/DECISIONS.md。
 
 ## 5. 产物

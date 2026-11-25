@@ -9,6 +9,7 @@
 /wandb/
 /swanlab/
 slurm-*.out
+/paper/build/
 *.pt
 *.pth
 *.ckpt

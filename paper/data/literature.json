@@ -1,0 +1,276 @@
+{
+ "source": "verified 2026-11-25 from primary sources: papers.miccai.org/miccai-2026/0884-Paper3942.html; pmc.ncbi.nlm.nih.gov/articles/PMC12112230; icon.bilkent.edu.tr/docs/Arslan-2025.pdf (SelfRDB MedIA) and arXiv 2405.06789; arXiv 2207.08208; arXiv 2106.16031; github.com/yufengxiecs/D3Bridge. FADM and ResViT SSIM converted from 0-1 to %.",
+ "order": [
+  "WRB",
+  "FADM",
+  "SelfRDB",
+  "SynDiff",
+  "ResViT",
+  "D3Bridge"
+ ],
+ "rows": [
+  {
+   "paper": "WRB",
+   "method": "pix2pix$^{\\ddagger}$",
+   "family": "pix2pix",
+   "psnr": "24.85$\\pm$1.57",
+   "ssim": "83.36$\\pm$3.11",
+   "psnr_value": 24.85,
+   "table": "Tab.~1"
+  },
+  {
+   "paper": "WRB",
+   "method": "CycleGAN$^{\\ddagger}$",
+   "family": "CycleGAN",
+   "psnr": "27.08$\\pm$3.42",
+   "ssim": "87.59$\\pm$2.93",
+   "psnr_value": 27.08,
+   "table": "Tab.~1"
+  },
+  {
+   "paper": "WRB",
+   "method": "BBDM$^{\\ddagger}$",
+   "family": "BBDM/I$^2$SB",
+   "psnr": "25.92$\\pm$2.00",
+   "ssim": "83.51$\\pm$4.05",
+   "psnr_value": 25.92,
+   "table": "Tab.~1"
+  },
+  {
+   "paper": "WRB",
+   "method": "DDPM$^{\\ddagger}$",
+   "family": "DDPM",
+   "psnr": "26.90$\\pm$1.84",
+   "ssim": "87.86$\\pm$2.85",
+   "psnr_value": 26.9,
+   "table": "Tab.~1"
+  },
+  {
+   "paper": "WRB",
+   "method": "SelfRDB",
+   "family": "SelfRDB",
+   "psnr": "26.84$\\pm$1.88",
+   "ssim": "90.59$\\pm$2.79",
+   "psnr_value": 26.84,
+   "table": "Tab.~1"
+  },
+  {
+   "paper": "WRB",
+   "method": "WRB",
+   "family": "WRB",
+   "psnr": "27.51$\\pm$1.00",
+   "ssim": "91.33$\\pm$2.07",
+   "psnr_value": 27.51,
+   "table": "Tab.~1"
+  },
+  {
+   "paper": "FADM",
+   "method": "CycleGAN",
+   "family": "CycleGAN",
+   "psnr": "19.21$\\pm$2.61",
+   "ssim": "82.7$\\pm$5.7",
+   "psnr_value": 19.21,
+   "table": "Tab.~2"
+  },
+  {
+   "paper": "FADM",
+   "method": "pix2pix",
+   "family": "pix2pix",
+   "psnr": "25.91$\\pm$3.72",
+   "ssim": "83.7$\\pm$4.7",
+   "psnr_value": 25.91,
+   "table": "Tab.~2"
+  },
+  {
+   "paper": "FADM",
+   "method": "SR3",
+   "family": "SR3",
+   "psnr": "27.49$\\pm$2.01",
+   "ssim": "86.9$\\pm$3.7",
+   "psnr_value": 27.49,
+   "table": "Tab.~2"
+  },
+  {
+   "paper": "FADM",
+   "method": "I$^2$SB",
+   "family": "BBDM/I$^2$SB",
+   "psnr": "29.21$\\pm$2.44",
+   "ssim": "93.7$\\pm$2.4",
+   "psnr_value": 29.21,
+   "table": "Tab.~2"
+  },
+  {
+   "paper": "FADM",
+   "method": "FADM",
+   "family": "FADM",
+   "psnr": "30.85$\\pm$1.34",
+   "ssim": "95.8$\\pm$2.5",
+   "psnr_value": 30.85,
+   "table": "Tab.~2"
+  },
+  {
+   "paper": "SelfRDB",
+   "method": "pix2pix",
+   "family": "pix2pix",
+   "psnr": "26.85$\\pm$1.57",
+   "ssim": "86.36$\\pm$3.11",
+   "psnr_value": 26.85,
+   "table": "Tab.~2"
+  },
+  {
+   "paper": "SelfRDB",
+   "method": "SAGAN",
+   "family": "SAGAN",
+   "psnr": "27.08$\\pm$1.57",
+   "ssim": "87.59$\\pm$2.93",
+   "psnr_value": 27.08,
+   "table": "Tab.~2"
+  },
+  {
+   "paper": "SelfRDB",
+   "method": "DDPM",
+   "family": "DDPM",
+   "psnr": "26.90$\\pm$1.84",
+   "ssim": "87.86$\\pm$2.85",
+   "psnr_value": 26.9,
+   "table": "Tab.~2"
+  },
+  {
+   "paper": "SelfRDB",
+   "method": "SynDiff",
+   "family": "SynDiff",
+   "psnr": "27.77$\\pm$1.77",
+   "ssim": "89.62$\\pm$2.87",
+   "psnr_value": 27.77,
+   "table": "Tab.~2"
+  },
+  {
+   "paper": "SelfRDB",
+   "method": "I$^2$SB",
+   "family": "BBDM/I$^2$SB",
+   "psnr": "25.92$\\pm$2.00",
+   "ssim": "83.51$\\pm$4.05",
+   "psnr_value": 25.92,
+   "table": "Tab.~2"
+  },
+  {
+   "paper": "SelfRDB",
+   "method": "SelfRDB",
+   "family": "SelfRDB",
+   "psnr": "27.98$\\pm$1.80",
+   "ssim": "90.01$\\pm$2.70",
+   "psnr_value": 27.98,
+   "table": "Tab.~2"
+  },
+  {
+   "paper": "SynDiff",
+   "method": "cGAN",
+   "family": "CycleGAN",
+   "psnr": "27.41$\\pm$0.78",
+   "ssim": "88.48$\\pm$1.45",
+   "psnr_value": 27.41,
+   "table": "Tab.~III"
+  },
+  {
+   "paper": "SynDiff",
+   "method": "DDPM",
+   "family": "DDPM",
+   "psnr": "25.49$\\pm$0.60",
+   "ssim": "84.71$\\pm$1.40",
+   "psnr_value": 25.49,
+   "table": "Tab.~III"
+  },
+  {
+   "paper": "SynDiff",
+   "method": "SynDiff",
+   "family": "SynDiff",
+   "psnr": "28.17$\\pm$0.90",
+   "ssim": "90.44$\\pm$1.48",
+   "psnr_value": 28.17,
+   "table": "Tab.~III"
+  },
+  {
+   "paper": "ResViT",
+   "method": "pix2pix",
+   "family": "pix2pix",
+   "psnr": "23.15$\\pm$1.93",
+   "ssim": "86.9$\\pm$1.6",
+   "psnr_value": 23.15,
+   "table": "Tab.~V"
+  },
+  {
+   "paper": "ResViT",
+   "method": "pGAN",
+   "family": "pGAN",
+   "psnr": "24.01$\\pm$1.15",
+   "ssim": "86.4$\\pm$1.4",
+   "psnr_value": 24.01,
+   "table": "Tab.~V"
+  },
+  {
+   "paper": "ResViT",
+   "method": "ResViT",
+   "family": "ResViT",
+   "psnr": "24.97$\\pm$1.07",
+   "ssim": "87.0$\\pm$1.4",
+   "psnr_value": 24.97,
+   "table": "Tab.~V"
+  },
+  {
+   "paper": "D3Bridge",
+   "method": "D3Bridge",
+   "family": "D3Bridge",
+   "psnr": "26.00",
+   "ssim": "89.57",
+   "psnr_value": 26.0,
+   "table": "README"
+  }
+ ],
+ "protocols": [
+  {
+   "paper": "WRB",
+   "name": "WRB",
+   "cite": "yang2026wrb",
+   "short": "BraTS'21, 25/5/10 subj.; slices 27--126; per-slice $[0,1]$; foreground mask; per-slice stats",
+   "n_test": 10
+  },
+  {
+   "paper": "FADM",
+   "name": "FADM",
+   "cite": "jiang2025fadm",
+   "short": "BraTS'21, 80/10/10; 70 slices/subj.; resized to 256; norm., mask, unit not reported",
+   "n_test": 10
+  },
+  {
+   "paper": "SelfRDB",
+   "name": "SelfRDB",
+   "cite": "arslan2025selfrdb",
+   "short": "BRATS, 25/10/20; 100 slices/subj.; volume mean-norm.; mask not stated",
+   "n_test": 20
+  },
+  {
+   "paper": "SynDiff",
+   "name": "SynDiff",
+   "cite": "ozbey2023syndiff",
+   "short": "BRATS, 25/10/20; 100 slices/subj.; \\emph{unpaired} training",
+   "n_test": 20
+  },
+  {
+   "paper": "ResViT",
+   "name": "ResViT",
+   "cite": "dalmaz2022resvit",
+   "short": "BRATS, 25/10/20; 100 slices/subj.; norm.\\ and mask not reported",
+   "n_test": 20
+  },
+  {
+   "paper": "D3Bridge",
+   "name": "D3Bridge",
+   "cite": "xie2026d3bridge",
+   "short": "BraTS'21, 25/5/10 (repository README only; no paper found)",
+   "n_test": 10
+  }
+ ],
+ "caption_note": "Selected rows; FADM and ResViT SSIM converted from $[0,1]$. $^{\\ddagger}$: digits identical (or one digit apart) to a row of the SelfRDB paper's Table~2 obtained under a different protocol, in two cases for a differently named method (WRB ``BBDM'' = SelfRDB ``I$^2$SB''; WRB ``CycleGAN'' mean and SSIM = SelfRDB ``SAGAN'').",
+ "figure_caption": "The same method as reported by different papers on BraTS T2$\\to$FLAIR (crosses: WRB rows whose digits match a SelfRDB-paper row; BBDM and I$^2$SB share a row because WRB's ``BBDM'' equals SelfRDB's ``I$^2$SB''; SynDiff's own numbers are from unpaired training). The spread for one method with paired training (3.7~dB for pix2pix, 3.3~dB for BBDM/I$^2$SB; the 8.2~dB CycleGAN spread mixes paired and unpaired training) is as large as the gaps the papers report between methods, so the protocol, not the method, dominates cross-paper differences.",
+ "paragraph": "Table~\\ref{tab:lit} and Fig.~\\ref{fig:lit} make three points. First, the protocols differ in subject split (40 to 100 subjects, 10 to 20 test subjects), slice selection, resizing versus padding, normalization, masking and statistic unit, and several of these are not reported at all. Second, the same method moves by several decibels between papers (pix2pix from 23.15 to 26.85~dB; I$^2$SB from 25.92 to 29.21~dB), which is larger than most reported method-to-method gains. Third, several baseline rows of WRB's T2$\\to$FLAIR table are digit-identical to rows of the SelfRDB paper, which used a different split (55 instead of 40 subjects), and in two cases the rows are attributed to differently named methods; we could not find a protocol under which both would be measured. We therefore do not rank our results against published numbers. Instead we retrain the reproducible baselines (pix2pix, SelfRDB) on our split, and we report a literature-protocol run only to calibrate how far the protocol moves PSNR."
+}

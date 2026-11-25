@@ -1,0 +1,22 @@
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lcccc|cccccc}
+\toprule
+& \multicolumn{4}{c|}{Image quality (brain mask; LPIPS full slice)} & \multicolumn{6}{c}{Lesion level ($S_{\mathrm{eval}}$)} \\
+Method & PSNR$\uparrow$ & SSIM$\uparrow$ & MAE$\downarrow$ & LPIPS$\downarrow$ & Dice$\uparrow$ & HD95$\downarrow$ & FP vol.\ ($10^3$)$\downarrow$ & Miss$\downarrow$ & SLR$\uparrow$ & EFA$\downarrow$ \\
+\midrule
+Identity (T2) & 11.90$\pm$2.41 & 0.250$\pm$0.171 & 0.218$\pm$0.085 & 0.165$\pm$0.025 & 0.39$\pm$0.27\prelim & 59.9\prelim & 77.8\prelim & 0.51\prelim & 0.32\prelim & 1.00\prelim \\
+Real FLAIR (reference) & -- & -- & -- & -- & 0.77$\pm$0.17\prelim & 39.7\prelim & 15.6\prelim & 0.13\prelim & 0.34\prelim & 0.50\prelim \\
+\midrule
+UNet-$\ell_1$ & \pend & \pend & \pend & \pend & \pend & \pend & \pend & \pend & \pend & \pend \\
+pix2pix & \pend & \pend & \pend & \pend & \pend & \pend & \pend & \pend & \pend & \pend \\
+SelfRDB (retrained) & \pend & \pend & \pend & \pend & \pend & \pend & \pend & \pend & \pend & \pend \\
+F0 (noise start) & \pend & \pend & \pend & \pend & \pend & \pend & \pend & \pend & \pend & \pend \\
+F1 (ours, trunk) & \pend & \pend & \pend & \pend & \pend & \pend & \pend & \pend & \pend & \pend \\
+F1 + lesion weight & \pend & \pend & \pend & \pend & \pend & \pend & \pend & \pend & \pend & \pend \\
+F1 + seg.\ consistency & \pend & \pend & \pend & \pend & \pend & \pend & \pend & \pend & \pend & \pend \\
+\bottomrule
+\end{tabular}
+}
+
+\vspace{2pt}
+{\footnotesize HD95 in voxels; FP vol.: voxels of $P$ farther than 5 voxels from the tumor; SLR: small-lesion recall (50 GT lesions $<$1000 voxels, pooled); EFA: false-alarm rate on 1161 tumor-free slices (pooled).}
