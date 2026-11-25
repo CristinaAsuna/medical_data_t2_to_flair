@@ -38,7 +38,8 @@ def seed_all(seed):
 
 def git_commit():
     try:
-        return subprocess.check_output(["git", "-C", str(ROOT), "rev-parse", "--short", "HEAD"], text=True).strip()
+        # cwd instead of `git -C`: the cluster's git 1.8.3 lacks -C
+        return subprocess.check_output(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT, text=True).strip()
     except Exception:
         return "unknown"
 
