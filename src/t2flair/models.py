@@ -21,6 +21,8 @@ class Generator(nn.Module):
             down_block_types=tuple("AttnDownBlock2D" if i in attn else "DownBlock2D" for i in levels),
             up_block_types=tuple("AttnUpBlock2D" if i in attn else "UpBlock2D" for i in reversed(levels)),
             norm_num_groups=min(32, base),
+            # channels per attention head; 8 is the diffusers default the approved trunk was smoked with
+            attention_head_dim=cfg_model.get("attn_head_dim", 8),
         )
 
     def forward(self, x_t, t, cond):

@@ -28,9 +28,9 @@ F1 端到端在 main_val 上的 PSNR，以及病灶 Dice 与上界的差各是�
 
 ## 下一步（当前卡片，在 cluster 上执行）
 
-PIPELINE.md §5 第 0–2 步已执行。A100 80 GB smoke（`4362831`）16 分 48 秒完成，F1 loss 下降且 val_psnr 有限；实测 1.04 it/s，峰值 57.7 GiB。曲线和评测 JSON 在 `scratch/smoke/`；计算节点 Git 不支持 `-C`，JSON 的 commit 字段为 `unknown`。
+PIPELINE.md §5 第 0–2 步已执行。A100 smoke（`4362831`）流程跑通，但只有 1.04 it/s，100k 步约 26.7 小时，超过 F1 的止损线（12 小时 × 1.5）。git `-C` 的问题已修（commit 字段不再是 unknown）。
 
-100k 步估算见 EXPERIMENTS.md，超过 18 小时止损线。当前停在第 2 步，等用户决定正式训练的预算或是否先排查吞吐。
+怀疑原因：diffusers 默认 `attention_head_dim=8`，48² 层是 32 个 8 维的头。现在先在 A100 上运行 `experiments/2026-11-24-trunk-bridge-fm/bench_attn.py`，比较 hd8/hd32/hd64、只在 24² 层用注意力、不用注意力、TF32，以及 DataLoader 单独的速度。结果交给用户决定：改 trunk.yaml 的 `model.attn_head_dim`/`attn_levels`，或减少步数。决定之前不提交正式训练。
 
 ## 搁置的想法
 
