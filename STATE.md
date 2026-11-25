@@ -1,6 +1,6 @@
 # 当前状态
 
-更新：2026-11-24
+更新：2026-11-25
 
 上限 40 行。每次会话结束时改写，不追加历史。
 
@@ -24,11 +24,13 @@ F1 端到端在 main_val 上的 PSNR，以及病灶 Dice 与上界的差各是�
 3. ablation：F1 + 分割一致性
 4. 基线：UNet-L1、pix2pix、SelfRDB（在 main 划分上重训）
 
-数据与环境：BraTS 2021 tar 已在 cluster `$LAB_DATA_DIR/brats2021/`（sha256 已核对，见 MACHINES.md）；环境见 PIPELINE.md。
+数据与环境：BraTS 2021 tar 和 LPIPS AlexNet 权重已在 cluster 共享目录登记（见 MACHINES.md）。作业 `4362829` 完成 main 预处理，manifest 验收通过（300/30/100，最大肿瘤裁剪损失 0）。
 
 ## 下一步（当前卡片，在 cluster 上执行）
 
-代码已完成并在 Mac 上通过 11 个测试（commit 见 git log）；集群上还没跑任何作业。按 docs/PIPELINE.md §5 的 0→5 顺序做：LPIPS 权重 → 预处理 → 真实数据 smoke（停下汇报 it/s 和耗时估算）→ F1 与分割器正式训练 → val 推理与评测 → 填卡片结果，等用户核对。
+PIPELINE.md §5 第 0–2 步已执行。A100 80 GB smoke（`4362831`）16 分 48 秒完成，F1 loss 下降且 val_psnr 有限；实测 1.04 it/s，峰值 57.7 GiB。曲线和评测 JSON 在 `scratch/smoke/`；计算节点 Git 不支持 `-C`，JSON 的 commit 字段为 `unknown`。
+
+100k 步估算见 EXPERIMENTS.md，超过 18 小时止损线。当前停在第 2 步，等用户决定正式训练的预算或是否先排查吞吐。
 
 ## 搁置的想法
 

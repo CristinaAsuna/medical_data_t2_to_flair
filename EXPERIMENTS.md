@@ -4,4 +4,4 @@
 
 | id | 类型 | 问题 | 影响的决定 | 状态 | 一句话结论 | 卡片 |
 |---|---|---|---|---|---|---|
-| 2026-11-24-trunk-bridge-fm | trunk | F1 端到端在 main_val 上的 PSNR 和病灶 Dice | 可信则锁 trunk-v1 并开消融；否则查契约或退回 F0 | running | — | [卡片](experiments/2026-11-24-trunk-bridge-fm/CARD.md) |
+| 2026-11-24-trunk-bridge-fm | trunk | F1 端到端在 main_val 上的 PSNR 和病灶 Dice | 可信则锁 trunk-v1 并开消融；否则查契约或退回 F0 | running | Smoke 11.18dB，Dice 0.016；100k约26.7h | [卡片](experiments/2026-11-24-trunk-bridge-fm/CARD.md) |
