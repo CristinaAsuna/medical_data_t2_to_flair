@@ -125,3 +125,17 @@ def test_generator_shapes():
     net = Generator(cfg, sample_size=64)
     out = net(torch.randn(2, 1, 64, 64), torch.rand(2), torch.randn(2, 3, 64, 64))
     assert out.shape == (2, 1, 64, 64)
+
+
+def test_generator_channels_last_same_output():
+    pytest.importorskip("diffusers")
+    from t2flair.models import Generator
+    cfg = {"base_channels": 16, "channel_mult": [1, 2, 2, 4], "layers_per_block": 1, "attn_levels": [2, 3],
+           "attn_head_dim": 8}
+    torch.manual_seed(0)
+    a = Generator(cfg, sample_size=64).eval()
+    b = Generator(dict(cfg, channels_last=True), sample_size=64).eval()
+    b.load_state_dict(a.state_dict())
+    args = torch.randn(2, 1, 64, 64), torch.rand(2), torch.randn(2, 3, 64, 64)
+    with torch.no_grad():
+        assert torch.allclose(a(*args), b(*args), atol=1e-4)

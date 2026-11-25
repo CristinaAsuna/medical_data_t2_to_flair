@@ -24,9 +24,16 @@ class Generator(nn.Module):
             # channels per attention head; 8 is the diffusers default the approved trunk was smoked with
             attention_head_dim=cfg_model.get("attn_head_dim", 8),
         )
+        # NHWC layout for faster bf16 convolutions; same maths, the state_dict is unchanged
+        self.channels_last = bool(cfg_model.get("channels_last", False))
+        if self.channels_last:
+            self.net.to(memory_format=torch.channels_last)
 
     def forward(self, x_t, t, cond):
-        return self.net(torch.cat([x_t, cond], dim=1), t * 1000.0).sample
+        x = torch.cat([x_t, cond], dim=1)
+        if self.channels_last:
+            x = x.contiguous(memory_format=torch.channels_last)
+        return self.net(x, t * 1000.0).sample.contiguous()
 
 
 def build_segmenter(arch):

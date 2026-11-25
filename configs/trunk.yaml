@@ -14,13 +14,14 @@ model:                      # diffusers UNet2DModel；192 输入下各级分辨�
   channel_mult: [1, 2, 4, 8]
   layers_per_block: 2
   attn_levels: [2, 3]       # 48×48 和 24×24 处加自注意力
+  attn_head_dim: 64         # 每个注意力头 64 维；diffusers 默认 8，A100 上慢 1.31 倍（bench 4362979）
 
 method:
   name: bridge              # F1：从中间切片的 T2 出发的布朗桥 FM（D-002）
   sigma: 0.5
 
 train:
-  steps: 100000
+  steps: 50000             # 约 106 轮（30277 切片 / bs 64）；LR 在 warmup 后为常数；见主干卡片
   batch_size: 64
   lr: 1.0e-4
   warmup: 1000

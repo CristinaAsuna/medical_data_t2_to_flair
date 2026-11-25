@@ -23,6 +23,9 @@ VARIANTS = {  # name -> overrides of cfg["model"]
     "hd32_attn23": {"attn_head_dim": 32},
     "hd64_attn3": {"attn_head_dim": 64, "attn_levels": [3]},
     "no_attn": {"attn_levels": []},
+    "hd64_attn23_cl": {"attn_head_dim": 64, "channels_last": True},
+    "hd64_attn3_cl": {"attn_head_dim": 64, "attn_levels": [3], "channels_last": True},
+    "no_attn_cl": {"attn_levels": [], "channels_last": True},
 }
 
 

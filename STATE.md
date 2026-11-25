@@ -28,9 +28,9 @@ F1 端到端在 main_val 上的 PSNR，以及病灶 Dice 与上界的差各是�
 
 ## 下一步（当前卡片，在 cluster 上执行）
 
-PIPELINE.md §5 第 0–2 步已执行。A100 smoke（`4362831`）流程跑通，但只有 1.04 it/s，100k 步约 26.7 小时，超过 F1 的止损线（12 小时 × 1.5）。git `-C` 的问题已修（commit 字段不再是 unknown）。
+§5 第 0–2 步已完成：smoke 4362831 跑通，但只有 1.04 it/s。测速 4362979 之后，用户批准主干改为 `attn_head_dim: 64`、50k 步（约 9.9 h，见卡片）。
 
-怀疑原因：diffusers 默认 `attention_head_dim=8`，48² 层是 32 个 8 维的头。现在先在 A100 上运行 `experiments/2026-11-24-trunk-bridge-fm/bench_attn.py`，比较 hd8/hd32/hd64、只在 24² 层用注意力、不用注意力、TF32，以及 DataLoader 单独的速度。结果交给用户决定：改 trunk.yaml 的 `model.attn_head_dim`/`attn_levels`，或减少步数。决定之前不提交正式训练。
+现在：在 A100 上测 channels_last（`bench_attn.py` 的 `*_cl` 变体）。如果加速明显，就在 trunk.yaml 里加 `model.channels_last: true`。然后跑短 smoke 确认速度，再进入 §5 第 3 步正式训练。
 
 ## 搁置的想法
 

@@ -4,6 +4,7 @@ Outputs go to scratch/smoke/ and a temporary PROJECT_RUNS_ROOT; nothing lands in
 """
 import json
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -25,6 +26,7 @@ def run(module, *args, env):
 
 def test_end_to_end(tmp_path):
     pytest.importorskip("diffusers")
+    shutil.rmtree(ROOT / "scratch" / "smoke" / EXP, ignore_errors=True)  # never resume a stale smoke run
     processed = tmp_path / "processed"
     processed.mkdir()
     ids = {"train": ["BraTS2021_9000%d" % i for i in range(4)], "val": ["BraTS2021_90010", "BraTS2021_90011"],
@@ -36,7 +38,7 @@ def test_end_to_end(tmp_path):
             np.savez_compressed(processed / (subject + ".npz"), **arrays)
     env = dict(os.environ, PYTHONPATH=str(ROOT / "src"), PROJECT_RUNS_ROOT=str(tmp_path / "runs"))
     sets = ["exp=%s" % EXP, "data.processed=%s" % processed, "data.splits=%s" % (tmp_path / "smoke"),
-            "data.crop=64", "model.base_channels=16", "model.channel_mult=[1,2,2,4]", "model.layers_per_block=1",
+            "data.crop=64", "model.base_channels=16", "model.channel_mult=[1,2,2,4]", "model.layers_per_block=1", "model.attn_head_dim=8",
             "train.steps=6", "train.batch_size=4", "train.num_workers=0", "train.log_every=2", "train.val_every=3",
             "train.val_subjects=2", "train.val_slices_per_subject=3", "train.val_steps=2",
             "seg.runs_exp=%s" % EXP, "seg.steps=4", "seg.batch_size=4", "seg.val_every=2",
