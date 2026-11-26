@@ -14,7 +14,7 @@ import os
 import numpy as np
 import torch
 
-from . import artifacts, bridge, config
+from . import artifacts, baselines, config
 from .common import device, run_path, to_device
 from .data import load_volume, volume_inputs
 from .models import Generator
@@ -88,7 +88,7 @@ def main():
         for j in range(0, inp["cond"].shape[0], args.batch):
             b = to_device({k: inp[k][j:j + args.batch] for k in ("cond", "source")}, dev)
             with torch.autocast(dev.type, dtype=torch.bfloat16, enabled=dev.type == "cuda"):
-                pred = bridge.sample(model, b["source"], b["cond"], steps, cfg["method"]["sigma"], gen)
+                pred = baselines.generate(model, b["source"], b["cond"], cfg, steps, gen)
             preds.append(pred[:, 0].float().cpu().numpy())
         tmp = out / (subject + ".tmp.npz")
         np.savez_compressed(tmp, pred=np.concatenate(preds).astype(np.float16), z=inp["z"])

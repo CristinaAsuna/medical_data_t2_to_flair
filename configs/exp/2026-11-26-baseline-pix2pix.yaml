@@ -1,0 +1,10 @@
+# 基线 pix2pix（卡片 experiments/2026-11-26-baseline-pix2pix）：UNet-L1 + 条件 70x70 PatchGAN，其余同 configs/trunk.yaml。
+exp: 2026-11-26-baseline-pix2pix
+method:
+  name: pix2pix
+  l1_weight: 100.0          # pix2pix 原文的 λ
+train:
+  lr: 2.0e-4                # pix2pix 原文：Adam lr 2e-4、betas (0.5, 0.999)，G 与 D 相同
+  betas: [0.5, 0.999]
+infer:
+  steps: 1

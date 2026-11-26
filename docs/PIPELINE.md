@@ -26,6 +26,8 @@ sbatch tools/jobs/prep.sbatch main    # bme_cpu：解压 tar 中的 t2/flair/seg
 python -m t2flair.train --config configs/trunk.yaml                                   # 主干 F1
 python -m t2flair.train --config configs/trunk.yaml --exp configs/exp/<id>.yaml       # 实验：只覆盖差异
 python -m t2flair.train_seg --config configs/trunk.yaml --role {s_train,s_eval}       # 分割器（各训一次，所有实验共用）
+# 基线（同一 UNet，只换目标，见 baselines.py）：--exp configs/exp/2026-11-26-baseline-{unet-l1,pix2pix}.yaml；推理/评测用 --steps 1
+# 与 F1 同训练量对比：主干推理加 --set infer.ckpt=step50k
 # 集群：sbatch -p bme_a10080g --gres=gpu:NVIDIAA10080GBPCIe:1 -J <名称> tools/jobs/gpu.sbatch "train --config configs/trunk.yaml"
 ```
 

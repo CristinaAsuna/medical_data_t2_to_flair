@@ -44,7 +44,13 @@ def _set(cfg, dotted, raw):
     node = cfg
     for key in keys[:-1]:
         node = node.setdefault(key, {})
-    node[keys[-1]] = yaml.safe_load(raw)
+    value = yaml.safe_load(raw)
+    if isinstance(value, str):  # YAML 1.1 reads "2e-4" as a string; accept plain numbers on the command line
+        try:
+            value = float(value)
+        except ValueError:
+            pass
+    node[keys[-1]] = value
 
 
 def load(path="configs/trunk.yaml", exp=None, overrides=()):

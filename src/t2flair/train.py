@@ -1,4 +1,4 @@
-"""Train the generator (F1 bridge FM on the trunk config).
+"""Train the generator: F1 bridge FM (trunk) or an in-house baseline (method.name, see baselines.py).
 
     python -m t2flair.train --config configs/trunk.yaml [--exp configs/exp/<id>.yaml] [--smoke]
 
@@ -13,7 +13,7 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader
 
-from . import artifacts, bridge, config
+from . import artifacts, baselines, bridge, config
 from .common import JsonlLog, device, infinite, run_path, seed_all, to_device
 from .data import SliceDataset, load_volume, volume_inputs
 from .metrics import psnr
@@ -41,7 +41,7 @@ def validate(model, subset, cfg, dev):
     for item in subset:
         b = to_device(item, dev)
         with torch.autocast(dev.type, dtype=torch.bfloat16, enabled=cfg["train"]["bf16"] and dev.type == "cuda"):
-            pred = bridge.sample(model, b["source"], b["cond"], cfg["train"]["val_steps"], cfg["method"]["sigma"], gen)
+            pred = baselines.generate(model, b["source"], b["cond"], cfg, cfg["train"]["val_steps"], gen)
         scores.append(psnr(pred[:, 0].cpu().numpy(), item["target"][:, 0].numpy(), item["brain"][:, 0].numpy() > 0))
     model.train()
     return float(np.mean(scores))
@@ -53,8 +53,9 @@ def main():
     parser.add_argument("--smoke", action="store_true", help="write to scratch/smoke instead of runs/")
     args = parser.parse_args()
     cfg = config.from_args(args)
-    if cfg["method"]["name"] != "bridge":
-        raise NotImplementedError("only method.name=bridge (F1) is implemented on the trunk")
+    method = cfg["method"]["name"]
+    if method not in baselines.METHODS:
+        raise NotImplementedError("method.name=%s (F0 is not implemented yet)" % method)
     t = cfg["train"]
     seed_all(t["seed"])
     dev = device()
@@ -69,7 +70,12 @@ def main():
 
     model = Generator(cfg["model"], sample_size=cfg["data"]["crop"]).to(dev)
     ema = copy.deepcopy(model).requires_grad_(False)
-    opt = torch.optim.AdamW(model.parameters(), lr=t["lr"], weight_decay=t["weight_decay"])
+    betas = tuple(t.get("betas", (0.9, 0.999)))
+    opt = torch.optim.AdamW(model.parameters(), lr=t["lr"], betas=betas, weight_decay=t["weight_decay"])
+    disc = opt_d = None
+    if method == "pix2pix":  # pix2pix: same optimizer settings for D as for G (set in the exp config)
+        disc = baselines.PatchDiscriminator().to(dev)
+        opt_d = torch.optim.Adam(disc.parameters(), lr=t["lr"], betas=betas)
     sched = torch.optim.lr_scheduler.LambdaLR(opt, lambda s: min(1.0, (s + 1) / max(1, t["warmup"])))
     step = 0
     if (run / "checkpoints" / "last.pt").exists():
@@ -78,6 +84,9 @@ def main():
         ema.load_state_dict(state["ema"])
         opt.load_state_dict(state["opt"])
         sched.load_state_dict(state["sched"])
+        if disc is not None:
+            disc.load_state_dict(state["disc"])
+            opt_d.load_state_dict(state["opt_d"])
         step = state["step"]
         print("resumed from step", step, flush=True)
     log.write(event="start", step=step, train_slices=len(data), params=count_params(model), device=str(dev))
@@ -86,6 +95,8 @@ def main():
         score = validate(ema, subset, cfg, dev)
         state = {"model": model.state_dict(), "ema": ema.state_dict(), "opt": opt.state_dict(),
                  "sched": sched.state_dict(), "step": step, "config": cfg}
+        if disc is not None:
+            state.update(disc=disc.state_dict(), opt_d=opt_d.state_dict())
         improved = artifacts.save_checkpoint(run, state, metric=score, lower_is_better=False)
         log.write(event="val", step=step, val_psnr=round(score, 4), best=improved)
 
@@ -95,7 +106,12 @@ def main():
     while step < t["steps"]:
         batch = to_device(next(batches), dev)
         with torch.autocast(dev.type, dtype=torch.bfloat16, enabled=t["bf16"] and dev.type == "cuda"):
-            loss = bridge.training_loss(model, batch, cfg["method"]["sigma"])
+            if method == "bridge":
+                loss = bridge.training_loss(model, batch, cfg["method"]["sigma"])
+            elif method == "regression":
+                loss, _ = baselines.regression_loss(model, batch)
+            else:
+                loss, parts = baselines.pix2pix_step(model, disc, opt_d, batch, cfg["method"].get("l1_weight", 100.0))
         if not torch.isfinite(loss):
             log.write(event="nan", step=step)
             raise FloatingPointError("non-finite loss at step %d" % step)
@@ -112,7 +128,8 @@ def main():
         step += 1
         running.append(loss.item())
         if step % t["log_every"] == 0:
-            log.write(event="train", step=step, loss=round(float(np.mean(running)), 6), lr=sched.get_last_lr()[0])
+            extra = {k: round(v, 5) for k, v in parts.items()} if method == "pix2pix" else {}
+            log.write(event="train", step=step, loss=round(float(np.mean(running)), 6), lr=sched.get_last_lr()[0], **extra)
             running = []
         if step % t["val_every"] == 0 or step == t["steps"]:
             checkpoint()

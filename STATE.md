@@ -20,16 +20,15 @@ F1 端到端在 main_val 上的 PSNR，以及病灶 Dice 与上界的差各是�
 1. ablation：F0（从噪声出发）vs F1
 2. ablation：F1 + 病灶加权（α=5）
 3. ablation：F1 + 分割一致性
-4. 基线：UNet-L1、pix2pix、SelfRDB（在 main 划分上重训）
+4. 基线：SelfRDB（在 main 划分上重训，需 third_party 适配层）
 
 数据与环境：BraTS 2021 tar 和 LPIPS AlexNet 权重已在 cluster 共享目录登记（见 MACHINES.md）。作业 `4362829` 完成 main 预处理，manifest 验收通过（300/30/100，最大肿瘤裁剪损失 0）。
 
 ## 下一步（当前卡片，在 cluster 上执行）
 
-- §5 第 0–2 步已完成，测速与配置决策见卡片。Smoke2 `4363121` 验收通过（1.363 it/s，50k 约 10.2 小时），产物在 `scratch/smoke/2026-11-24-trunk-bridge-fm-smoke2/`。
-- §5 第 3 步作业 `4363186` 已提交至 `bme_a10080g`，run_id `2026-11-24-trunk-bridge-fm-20261125-141234-cluster`，训练代码 `8074cf8`。依次运行 F1 50k、S_eval、S_train。
-- 提交后检查显示因 `Priority` 排队，正式吞吐待核对。按 Slurm 预排 2026-11-25 17:04 开始、运行 14–15 小时估算，2026-11-26 07:04–08:04 完成（北京时间，随实际开跑时间更新）。
-- 作业结束后按卡片比较 40k、45k 和 50k 的 val_psnr，决定是否续训到 80k，再执行 §5 第 4、5 步。
+- 主干：50k 作业 `4363186` 完成（val_psnr 20.73，S_eval 0.838 / S_train 0.871），续训规则触发（+0.34 dB）→ 保留 `step50k.pt` 后续训到 80k（提示词见卡片），之后用 D-006 规则做 §5 第 4、5 步。
+- 基线（用户 2026-11-26 批准，提前于主干锁定开卡）：`2026-11-26-baseline-unet-l1`、`2026-11-26-baseline-pix2pix`，代码已就绪，各 50k 步、约 10–12 h；与 F1 的 `step50k.pt` 比较。
+- 作业名额：同时最多 2 个（含排队的 repa 4363187），免费 bme_a10080g 每人 1 张卡；排法见最新会话。
 
 ## 搁置的想法
 

@@ -1,0 +1,6 @@
+# 基线 UNet-L1（卡片 experiments/2026-11-26-baseline-unet-l1）：只改训练目标，其余同 configs/trunk.yaml。
+exp: 2026-11-26-baseline-unet-l1
+method:
+  name: regression          # 输入 x_t 固定为 T2、t=0，一次前向，L1 损失
+infer:
+  steps: 1                  # 一次前向出图
