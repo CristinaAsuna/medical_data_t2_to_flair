@@ -1,0 +1,17 @@
+{
+  "run_id": "2026-11-26-baseline-pix2pix-20261126-102130-cluster",
+  "exp": "2026-11-26-baseline-pix2pix",
+  "repo": "medical_data_t2_to_flair",
+  "project": ".",
+  "machine": "cluster",
+  "host": "bme_login2",
+  "run_dir": "/public_bme2/bme-cuizhm/maxquan/Projects/medical_data_t2_to_flair/runs/2026-11-26-baseline-pix2pix/2026-11-26-baseline-pix2pix-20261126-102130-cluster",
+  "code_dir": "/public_bme2/bme-cuizhm/maxquan/Projects/medical_data_t2_to_flair/runs/2026-11-26-baseline-pix2pix/2026-11-26-baseline-pix2pix-20261126-102130-cluster/code",
+  "command": "sbatch -p bme_a10080g --gres=gpu:NVIDIAA10080GBPCIe:1 -t 40:00:00 -J t2f-chain scratch/slurm/t2f-trunk.sbatch \"train --config configs/trunk.yaml --set train.steps=80000\" \"infer --config configs/trunk.yaml --split val --steps 50 --seed 0\" \"evaluate --config configs/trunk.yaml --split val --steps 50 --seed 0 --out experiments/2026-11-24-trunk-bridge-fm/result.json --run-id <TRUNK>\" \"figures --config configs/trunk.yaml --out experiments/2026-11-24-trunk-bridge-fm/figures\" \"infer --config configs/trunk.yaml --set infer.ckpt=step50k --split val --steps 50 --seed 0\" \"evaluate --config configs/trunk.yaml --set infer.ckpt=step50k --split val --steps 50 --seed 0 --out scratch/eval/f1_step50k_result.json\" \"train --config configs/trunk.yaml --exp configs/exp/2026-11-26-baseline-unet-l1.yaml\" \"infer --config configs/trunk.yaml --exp configs/exp/2026-11-26-baseline-unet-l1.yaml --split val --steps 1 --seed 0\" \"evaluate --config configs/trunk.yaml --exp configs/exp/2026-11-26-baseline-unet-l1.yaml --split val --steps 1 --seed 0 --out experiments/2026-11-26-baseline-unet-l1/result.json --run-id <UNET>\" \"figures --config configs/trunk.yaml --exp configs/exp/2026-11-26-baseline-unet-l1.yaml --steps 1 --out experiments/2026-11-26-baseline-unet-l1/figures\" \"train --config configs/trunk.yaml --exp configs/exp/2026-11-26-baseline-pix2pix.yaml\" \"infer --config configs/trunk.yaml --exp configs/exp/2026-11-26-baseline-pix2pix.yaml --split val --steps 1 --seed 0\" \"evaluate --config configs/trunk.yaml --exp configs/exp/2026-11-26-baseline-pix2pix.yaml --split val --steps 1 --seed 0 --out experiments/2026-11-26-baseline-pix2pix/result.json --run-id <P2P>\" \"figures --config configs/trunk.yaml --exp configs/exp/2026-11-26-baseline-pix2pix.yaml --steps 1 --out experiments/2026-11-26-baseline-pix2pix/figures\"",
+  "commit": "e532097dbc068f46167758c54c29391bf44ec548",
+  "started": "2026-11-26T10:21:30",
+  "ended": null,
+  "status": "running",
+  "job": null,
+  "note": "chain job"
+}
