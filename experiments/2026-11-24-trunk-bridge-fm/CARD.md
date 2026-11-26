@@ -19,17 +19,19 @@ F1 桥式 FM 端到端（预处理 → 训练 → 50 步推理 → 唯一评测�
 ## 相对主干的改动
 本卡片定义主干本身：configs/trunk.yaml = F1（σ=0.5，UNet 基础通道 64，bs 64，lr 1e-4，EMA 0.9999，50k 步）。没有 configs/exp 文件。
 - 2026-11-25 正式运行前改动（用户批准，预测和推翻条件不变）：smoke 4362831 只有 1.04 it/s，100k 步约 26 h，超过止损线。A100 测速 4362979：注意力头 8→64 维快 1.31 倍（1.40 it/s）；数据加载和 TF32 都不是瓶颈。因此改为 `attn_head_dim: 64`、100k→50k 步，按 1.40 it/s 约 9.9 h。channels_last 实测只有 0.76 倍（测速 4363005，更慢），不开；smoke2 4363121 实测 1.363 it/s，50k 步约 10.2 h。
-- 续训规则（运行前定好，只用一次）：如果 45k 和 50k 两次验证中较高的 val_psnr 比 40k 时高出 0.3 dB 以上，就用同一条命令加 `--set train.steps=80000`，从 last.pt 续训到 80k（按 1.40 it/s 算总共约 15.9 h，没有超过 18 h 的止损线）；否则就停在 50k。无论哪种情况，都用 best.pt 进入推理和评测。
+- 续训规则（运行前定好，只用一次）：如果 45k 和 50k 两次验证中较高的 val_psnr 比 40k 时高出 0.3 dB 以上，就用同一条命令加 `--set train.steps=80000`，从 last.pt 续训到 80k（按 1.40 it/s 算总共约 15.9 h，没有超过 18 h 的止损线）；否则就停在 50k。
+- 2026-11-26 续训已触发：作业 4363186 val_psnr 40k 20.39 → 45k 20.62 / 50k 20.73（+0.34 dB）；S_eval 最后一步 0.838（最好 0.860），S_train 0.871。续训前把 50k 的 last.pt 原样复制为 `step50k.pt`，供消融按 50k 预算比较。
 
 ## 评测
 同 PIPELINE.md §4（main_val，50 步，seed 0）。本卡片同时实现唯一评测入口、S_train 和 S_eval。
+- 2026-11-26 评测改动（用户批准，在评测前生效，预测和推翻条件不变；D-006）：生成器和分割器一律用最后一步的 last.pt，不再按 main_val 挑 best（best 只作诊断）；HD95 空预测记 373.13；新增编造病灶数与漏检病灶数，小病灶召回降为探索性。
 
 ## 计算和存储预算
 - 集群：预处理 1 个 bme_cpu 作业，约 2 小时；F1 训练 1×A100 80G，约 12 GPU 小时；S_train 和 S_eval 各约 2 GPU 小时。合计约 16 GPU 小时。
 - 存储上限 20 GB（runs/ 下全部产物）。超过 1.5 倍预算或出现 NaN 就停下来问。
 
 ## 要保存的产物
-result.json；figures/val_samples.png；figures/train_curve.png；checkpoints/best.pt（F1、S_train、S_eval 各一个，放在各自的 run 目录）；runs/<id>/samples/val-steps50-seed0/（推理缓存，供后续 analysis 复用）。
+result.json；figures/val_samples.png；figures/train_curve.png；checkpoints/last.pt 和 best.pt（F1、S_train、S_eval 各一套，放在各自的 run 目录）；F1 的 checkpoints/step50k.pt（约 1 GB）；runs/<id>/samples/val-steps50-seed0/（推理缓存，供后续 analysis 复用）。
 
 ## 结果
 【运行后填写：数字、与主干的差、结论、这个实验不能说明什么】
