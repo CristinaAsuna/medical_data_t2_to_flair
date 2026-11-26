@@ -1,10 +1,11 @@
-"""Generate FLAIR for every kept slice of a split with the EMA weights of best.pt.
+"""Generate FLAIR for every kept slice of a split with the EMA weights of one checkpoint.
 
     python -m t2flair.infer --config configs/trunk.yaml --split val --steps 50 --seed 0
 
-Output: artifacts.cache_dir("samples", ...) keyed by exp, checkpoint, split, steps, seed and
-sigma; one <subject>.npz (pred float16 (N,H,W), z) per subject. The same key is generated
-once; t2flair.evaluate finds it with samples_dir().
+Uses the checkpoint named by infer.ckpt (trunk: last = final step, no selection on main_val;
+D-006). Output: artifacts.cache_dir("samples", ...) keyed by exp, checkpoint (name plus its
+step or best metric), split, steps, seed and sigma; one <subject>.npz (pred float16 (N,H,W), z)
+per subject. The same key is generated once; t2flair.evaluate finds it with samples_dir().
 """
 import argparse
 import json
@@ -20,15 +21,35 @@ from .models import Generator
 from .splits import load_split
 
 
+def ckpt_name(cfg):
+    return cfg["infer"].get("ckpt", "best")
+
+
+def checkpoint_key(run, which):
+    """Identify a checkpoint for cache keys without loading it.
+
+    best: its validation metric (best.json); last: the step of the last "val" event in log.jsonl
+    (train.py writes last.pt right before logging that event); any other name is a frozen snapshot.
+    """
+    if which == "best":
+        return {"ckpt": "best", "ckpt_metric": json.loads((run / "checkpoints" / "best.json").read_text())["metric"]}
+    if which == "last":
+        steps = [json.loads(line)["step"] for line in (run / "log.jsonl").read_text().splitlines()
+                 if json.loads(line).get("event") == "val"]
+        return {"ckpt": "last", "ckpt_step": steps[-1]}
+    return {"ckpt": which}
+
+
 def samples_dir(cfg, split, steps, seed, smoke=False):
     run = run_path(cfg, "model", smoke=smoke)
-    best = json.loads((run / "checkpoints" / "best.json").read_text())
+    which = ckpt_name(cfg)
+    key = checkpoint_key(run, which)
     if smoke:  # smoke outputs stay in scratch/, never in runs/_cache (AGENTS.md §5)
-        path = run / "samples" / "{}-steps{}-seed{}".format(split, steps, seed)
+        path = run / "samples" / "{}-{}-steps{}-seed{}".format(split, which, steps, seed)
         path.mkdir(parents=True, exist_ok=True)
         return path
-    return artifacts.cache_dir("samples", exp=cfg["exp"], smoke=smoke, ckpt="best", ckpt_metric=best["metric"],
-                               split=split, steps=steps, seed=seed, sigma=cfg["method"]["sigma"])
+    return artifacts.cache_dir("samples", exp=cfg["exp"], smoke=smoke, split=split, steps=steps, seed=seed,
+                               sigma=cfg["method"]["sigma"], **key)
 
 
 def subject_generator(dev, seed, subject):
@@ -52,7 +73,7 @@ def main():
     if artifacts.is_complete(out):
         print("already complete:", out)
         return
-    state = artifacts.load_checkpoint(run_path(cfg, "model", smoke=args.smoke), "best")
+    state = artifacts.load_checkpoint(run_path(cfg, "model", smoke=args.smoke), ckpt_name(cfg))
     model = Generator(cfg["model"], sample_size=cfg["data"]["crop"]).to(dev)
     model.load_state_dict(state["ema"])
     model.eval()
@@ -73,7 +94,7 @@ def main():
         np.savez_compressed(tmp, pred=np.concatenate(preds).astype(np.float16), z=inp["z"])
         os.replace(tmp, target)
         print("infer %d/%d %s" % (i, len(subjects), subject), flush=True)
-    (out / "meta.json").write_text(json.dumps({"ckpt_step": state["step"], "subjects": len(subjects)}))
+    (out / "meta.json").write_text(json.dumps({"ckpt": ckpt_name(cfg), "ckpt_step": state["step"], "subjects": len(subjects)}))
     artifacts.mark_complete(out)
     print("samples:", out)
 

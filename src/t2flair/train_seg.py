@@ -4,8 +4,8 @@
 
 s_train (BasicUNet, seed 1) is for the segmentation-consistency ablation; s_eval (SegResNet,
 seed 2) is the independent evaluator and is never used to train a generator. Writes
-runs/<seg.runs_exp>/<role>/{log.jsonl, checkpoints/{last,best}.pt}; best by mean 3D Dice
-over main_val subjects.
+runs/<seg.runs_exp>/<role>/{log.jsonl, checkpoints/{last,best}.pt}. best (mean 3D Dice over
+main_val) is a diagnostic only; evaluation loads seg.ckpt (trunk: last, D-006).
 """
 import argparse
 
@@ -44,7 +44,7 @@ def predict_volume(net, images, dev, threshold, batch=64):
 
 def load_segmenter(cfg, role, dev, smoke=False):
     run = seg_run(cfg, role, smoke=smoke)
-    state = artifacts.load_checkpoint(run, "best")
+    state = artifacts.load_checkpoint(run, cfg["seg"].get("ckpt", "best"))
     net = build_segmenter(state["arch"]).to(dev)
     net.load_state_dict(state["model"])
     net.eval()

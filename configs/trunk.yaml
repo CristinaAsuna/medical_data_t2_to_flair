@@ -40,6 +40,7 @@ train:
 infer:
   steps: 50
   seed: 0
+  ckpt: last                # 用最后一步的 EMA 权重，不按 main_val 挑 best（D-006）
 
 seg:                        # 只在 main_train 的真实 FLAIR 上训练；单通道输入，输出 whole tumor 的 logit
   runs_exp: 2026-11-24-trunk-bridge-fm   # 分割器只训一次，放在主干卡片的 runs/ 下，所有实验共用
@@ -50,10 +51,14 @@ seg:                        # 只在 main_train 的真实 FLAIR 上训练；单�
   s_train: {arch: basicunet, seed: 1}
   s_eval: {arch: segresnet, seed: 2}
   threshold: 0.5
+  ckpt: last                # 评测加载最后一步；best（按 main_val Dice）只作诊断（D-006）
 
 eval:
   split: val
   fp_dilate: 5              # 假阳性：P 中距 GT 超过 5 体素（3D 球形膨胀）的部分
-  small_lesion_voxels: 1000 # GT 连通域 < 1000 体素（约 1 mL）记为小病灶
+  small_lesion_voxels: 1000 # GT 连通域 < 1000 体素（约 1 mL）记为小病灶；小病灶召回只作探索性指标
+  fp_lesion_voxels: 10      # 编造病灶：P 中 ≥10 体素、不接触 dilate(G,5) 的连通域（26 连通）
+  gt_lesion_voxels: 50      # 漏检病灶：G 中 ≥50 体素、P 完全没碰到的连通域
+  hd95_empty: 373.13        # 恰有一方为空时的 HD95（BraTS 体积对角线，D-006）
   empty_slice_tau: 20       # 无肿瘤切片上预测超过 20 像素记为误报
   lpips: true

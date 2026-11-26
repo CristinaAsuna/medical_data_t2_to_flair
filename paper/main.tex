@@ -212,20 +212,19 @@ $\hat x$ is reliable. $\Strain$ and the evaluation segmenter $\Seval$ differ in 
 \label{sec:eval}
 $\Seval$ is a 2D SegResNet~\cite{myronenko2018segresnet} (MONAI~\cite{cardoso2022monai}) and $\Strain$ a 2D
 U-Net~\cite{ronneberger2015unet} (MONAI BasicUNet); both map one FLAIR slice to a whole-tumor logit, are trained on
-\texttt{main\_train} real FLAIR only (soft Dice+BCE, 20k steps), are selected by mean 3D Dice on \texttt{main\_val}, and are
-then frozen. For each subject, slice predictions are thresholded at 0.5 and stacked into a 3D mask $P$ and compared with
+\texttt{main\_train} real FLAIR only (soft Dice+BCE, 20k steps), are evaluated at their final step (no checkpoint selection on \texttt{main\_val}), and are then frozen. For each subject, slice predictions are thresholded at 0.5 and stacked into a 3D mask $P$ and compared with
 the ground truth $G$:
 \begin{itemize}
-\item Dice$(P,G)$ and symmetric HD95;
+\item Dice$(P,G)$ and symmetric HD95 (373.13 voxels, the diagonal of the BraTS volume, when exactly one mask is empty; the number of empty predictions is reported);
 \item false-positive volume $|P\setminus\mathrm{dilate}(G,5)|$ (invented lesions away from the tumor);
 \item miss rate $1-|P\cap G|/|G|$ (erased lesion);
-\item small-lesion recall: fraction of GT connected components $<1000$ voxels touched by $P$ (pooled over subjects);
-\item empty-slice false-alarm rate: fraction of tumor-free slices with $|P|>20$ pixels (pooled).
+\item invented lesions: number of connected components of $P$ ($\geq$10 voxels) that do not touch $\mathrm{dilate}(G,5)$;
+\item missed lesions: number of GT components ($\geq$50 voxels) not touched by $P$, and the per-subject lesion detection rate;
+\item exploratory, pooled over subjects: empty-slice false-alarm rate (tumor-free slices with $|P|>20$ pixels) and small-lesion recall (GT components $<1000$ voxels touched by $P$).
 \end{itemize}
 The same $\Seval$ is applied to the identity input (the T2 slice itself) and to real FLAIR; the latter shows what the evaluator achieves on real images.
 Neither is a bound: a generator can produce more false positives than identity, or exceed real FLAIR by exaggerating lesion
-contrast. Small-lesion recall counts GT components below 1000 voxels; in glioma most of these are satellites of the main
-mass, so it is a secondary, exploratory metric. Image quality is measured with PSNR, SSIM~\cite{wang2004ssim} and MAE inside
+contrast. Components use 26-connectivity. Small GT components in glioma are mostly satellites of the main mass, so small-lesion recall is exploratory; lesion counts replace it. Image quality is measured with PSNR, SSIM~\cite{wang2004ssim} and MAE inside
 the brain mask after mapping $[-1,1]\to[0,1]$, and LPIPS~\cite{zhang2018lpips} (AlexNet) on the full slice.
 
 \emph{Validity of the evaluator.} $\Seval$ is trained on real FLAIR and applied to synthetic images, so part of a Dice gap
@@ -238,9 +237,7 @@ generator's image error, and (ii) report the per-subject correlation between ima
 $f_\theta$ is a 2D UNet (diffusers \texttt{UNet2DModel}; base width 64, multipliers $1,2,4,8$, two residual blocks per level,
 self-attention at $48^2$ and $24^2$ with 64 channels per head; 63.2M parameters) taking $(x_t,c)$ as four input channels.
 Training: AdamW, learning rate $10^{-4}$ with 1k-step warm-up and then constant, batch 64, 50k steps (about 106 epochs of the
-30{,}277 training slices), EMA 0.9999, gradient clipping 1.0, bf16, horizontal flips only. The checkpoint is selected by
-brain-mask PSNR of EMA samples (10 steps) on a fixed subset of \texttt{main\_val}. A pre-registered extension rule continues
-training once to 80k steps if the best validation PSNR at 45k/50k exceeds that at 40k by more than 0.3~dB. On one A100
+30{,}277 training slices), EMA 0.9999, gradient clipping 1.0, bf16, horizontal flips only. All models are evaluated at their final step with EMA weights; validation PSNR (10 sampling steps, 8 \texttt{main\_val} subjects) is only logged and used by a pre-registered rule that decides training length: training continues once to 80k steps if the better of the 45k/50k values exceeds the 40k value by more than 0.3~dB. The rule was triggered (20.39$\to$20.73~dB), so the trunk is trained for 80k steps. On one A100
 80GB PCIe this runs at a measured 1.36 it/s (about 10.2 h). Moving from the library default of 8 channels per attention head to 64
 gave a $1.31\times$ speed-up without changing the parameter count; the data loader and TF32 were not bottlenecks.
 
@@ -260,13 +257,10 @@ Metrics are computed per subject and summarized as mean $\pm$ s.d.\ over subject
 empty-slice false alarms, which are pooled ratios and are compared with a subject-level bootstrap. Subjects with an empty
 prediction have undefined HD95; their number is reported (a fixed penalty value is an open choice). Each hypothesis gets one
 primary endpoint with a non-inferiority margin, fixed in its experiment card before running: for H1, the paired difference
-in false-positive volume between F1 and F0, with PSNR non-inferiority (e.g.\ $-0.5$~dB, two one-sided tests); for H2, the
-paired difference in miss rate, with false-positive non-inferiority. Primary endpoints are tested with paired Wilcoxon
+in false-positive volume between F1 and F0, with PSNR non-inferiority ($-0.5$~dB, one-sided 95\% bootstrap bound); for H2, the paired difference in miss rate, with false-positive non-inferiority ($+10\%$ of the reference mean). Primary endpoints are tested with paired Wilcoxon
 signed-rank tests over subjects, Holm-corrected across hypotheses, with 95\% bootstrap confidence intervals; all other
 metrics are exploratory. The trunk experiment itself is judged on PSNR relative to identity and on $\Seval$ Dice relative to
-real FLAIR. Model selection uses \texttt{main\_val} (the generator on an 8-subject subset, the segmenters on all 30
-subjects), so \texttt{main\_val} numbers are optimistic, the real-FLAIR reference in particular; \texttt{main\_test} gives
-the unbiased estimate. With 30 subjects only large paired effects are detectable; a minimum detectable effect will be
+real FLAIR. No checkpoint is selected on \texttt{main\_val}: every model is evaluated at the end of a fixed training budget, so \texttt{main\_val} is used for reporting and for the training-length rule only; \texttt{main\_test} remains the unbiased estimate. With 30 subjects only large paired effects are detectable; a minimum detectable effect will be
 computed from the trunk's per-subject spread.
 
 \subsection{Compared methods}

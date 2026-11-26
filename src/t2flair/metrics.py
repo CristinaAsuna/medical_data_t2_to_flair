@@ -56,10 +56,20 @@ def dice(p, g):
     return 1.0 if s == 0 else float(2.0 * np.logical_and(p, g).sum() / s)
 
 
-def hd95(p, g):
-    """Symmetric 95th-percentile Hausdorff distance in voxels (1 mm isotropic); nan if either is empty."""
+# Diagonal of the 240x240x155 BraTS volume in voxels, sqrt(240^2 + 240^2 + 155^2): the HD95 that
+# BraTS assigns when exactly one of prediction and ground truth is empty (D-006).
+HD95_EMPTY = 373.13
+
+
+def hd95(p, g, empty_penalty=HD95_EMPTY):
+    """Symmetric 95th-percentile Hausdorff distance in voxels (1 mm isotropic).
+
+    Both masks empty: 0. Exactly one empty: empty_penalty (never nan, so no subject is dropped).
+    """
+    if not p.any() and not g.any():
+        return 0.0
     if not p.any() or not g.any():
-        return float("nan")
+        return float(empty_penalty)
     surf = lambda m: np.logical_xor(m, ndimage.binary_erosion(m))
     sp, sg = surf(p), surf(g)
     d_pg = ndimage.distance_transform_edt(~sg)[sp]
@@ -67,27 +77,55 @@ def hd95(p, g):
     return float(max(np.percentile(d_pg, 95), np.percentile(d_gp, 95)))
 
 
-def lesion_metrics(p, g, fp_dilate=5, small_voxels=1000, empty_tau=20):
-    """p: predicted tumor mask, g: GT mask, both (N, H, W) bool.
+def _components(mask):
+    labels, n = ndimage.label(mask, structure=np.ones((3, 3, 3), dtype=bool))
+    index = np.arange(1, n + 1)
+    sizes = ndimage.sum(np.ones_like(mask, dtype=np.int64), labels, index=index) if n else np.zeros(0)
+    return labels, index, np.asarray(sizes)
 
-    Returns per-subject numbers plus raw counts for pooled small-lesion recall.
+
+def _touches(labels, index, other):
+    """For each component, whether it overlaps the boolean mask `other`."""
+    if index.size == 0:
+        return np.zeros(0, dtype=bool)
+    return np.asarray(ndimage.maximum(other.astype(np.uint8), labels, index=index)) > 0
+
+
+def lesion_metrics(p, g, fp_dilate=5, small_voxels=1000, empty_tau=20, fp_lesion_voxels=10, gt_lesion_voxels=50,
+                   hd95_empty=HD95_EMPTY):
+    """p: predicted tumor mask, g: GT mask, both (N, H, W) bool. Components use 26-connectivity.
+
+    Per subject: Dice, HD95, FP volume (voxels of p farther than fp_dilate from g), miss rate;
+    lesion counts: fp_lesions = components of p with >= fp_lesion_voxels that do not touch
+    dilate(g, fp_dilate) (invented lesions); missed_lesions / gt_lesions = components of g with
+    >= gt_lesion_voxels that p does not touch; lesion_detection = 1 - missed/gt. Raw counts for
+    the pooled small-lesion recall and empty-slice false alarms (exploratory) are also returned.
     """
     near = ndimage.binary_dilation(g, structure=_ball(fp_dilate))
-    labels, n = ndimage.label(g, structure=np.ones((3, 3, 3), dtype=bool))
-    sizes = ndimage.sum(np.ones_like(g, dtype=np.int64), labels, index=range(1, n + 1)) if n else []
-    small = [i + 1 for i, size in enumerate(sizes) if size < small_voxels]
-    hit = [bool(np.logical_and(labels == lab, p).any()) for lab in small]
+    g_lab, g_idx, g_size = _components(g)
+    p_lab, p_idx, p_size = _components(p)
+    g_hit = _touches(g_lab, g_idx, p)
+    p_near = _touches(p_lab, p_idx, near)
+    small = g_size < small_voxels
+    counted = g_size >= gt_lesion_voxels
+    gt_lesions = int(counted.sum())
+    missed = int((counted & ~g_hit).sum())
     empty = ~g.reshape(g.shape[0], -1).any(axis=1)
     false_slices = p.reshape(p.shape[0], -1).sum(axis=1) > empty_tau
     return {
         "dice": dice(p, g),
-        "hd95": hd95(p, g),
+        "hd95": hd95(p, g, hd95_empty),
         "fp_volume": int(np.logical_and(p, ~near).sum()),
         "miss_rate": float(1.0 - np.logical_and(p, g).sum() / g.sum()) if g.any() else float("nan"),
+        "fp_lesions": int(((p_size >= fp_lesion_voxels) & ~p_near).sum()),
+        "missed_lesions": missed,
+        "gt_lesions": gt_lesions,
+        "lesion_detection": 1.0 - missed / gt_lesions if gt_lesions else float("nan"),
+        "empty_prediction": bool(not p.any()),
         "pred_volume": int(p.sum()),
         "gt_volume": int(g.sum()),
-        "small_lesions": len(small),
-        "small_detected": int(sum(hit)),
+        "small_lesions": int(small.sum()),
+        "small_detected": int((small & g_hit).sum()),
         "empty_slices": int(empty.sum()),
         "empty_slices_flagged": int(np.logical_and(empty, false_slices).sum()),
     }

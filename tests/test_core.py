@@ -139,3 +139,35 @@ def test_generator_channels_last_same_output():
     args = torch.randn(2, 1, 64, 64), torch.rand(2), torch.randn(2, 3, 64, 64)
     with torch.no_grad():
         assert torch.allclose(a(*args), b(*args), atol=1e-4)
+
+
+def test_hd95_empty_penalty_and_lesion_counts():
+    g = np.zeros((10, 40, 40), bool)
+    g[3:7, 5:15, 5:15] = True                      # one lesion, 400 voxels
+    assert metrics.hd95(np.zeros_like(g), g) == metrics.HD95_EMPTY
+    assert metrics.hd95(np.zeros_like(g), np.zeros_like(g)) == 0.0
+    p = np.zeros_like(g)
+    p[4, 30:34, 30:34] = True                      # 16-voxel invented lesion far away
+    p[1, 0, 39] = True                             # 1-voxel speck: below fp_lesion_voxels
+    m = metrics.lesion_metrics(p, g, fp_dilate=2, fp_lesion_voxels=10, gt_lesion_voxels=50)
+    assert m["fp_lesions"] == 1 and m["missed_lesions"] == 1 and m["gt_lesions"] == 1
+    assert m["lesion_detection"] == 0.0 and not m["empty_prediction"]
+    p[5, 8, 8] = True                              # now touches the GT lesion
+    m = metrics.lesion_metrics(p, g, fp_dilate=2, fp_lesion_voxels=10, gt_lesion_voxels=50)
+    assert m["missed_lesions"] == 0 and m["lesion_detection"] == 1.0 and m["fp_lesions"] == 1
+
+
+def test_compare_paired_stats_and_holm():
+    from t2flair import compare
+    rng = np.random.default_rng(0)
+    base = rng.normal(20, 2, 30)
+    a = {"s%d" % i: {"subject": "s%d" % i, "psnr": base[i] + 1.0, "empty_slices": 10, "empty_slices_flagged": 1}
+         for i in range(30)}
+    b = {"s%d" % i: {"subject": "s%d" % i, "psnr": base[i], "empty_slices": 10, "empty_slices_flagged": 3}
+         for i in range(30)}
+    st = compare.compare_metric(a, b, "psnr")
+    assert abs(st["diff"] - 1.0) < 1e-9 and st["p"] < 1e-5 and st["ci95"][0] <= 1.0 <= st["ci95"][1]
+    assert compare.noninferior(st, "higher", "0.5", st["mean_b"])["passes"]
+    pooled = compare.compare_metric(a, b, "empty_slice_false_alarm")
+    assert abs(pooled["diff"] - (-0.2)) < 1e-9
+    assert compare.holm([0.01, 0.04, 0.03]) == [0.03, 0.06, 0.06]

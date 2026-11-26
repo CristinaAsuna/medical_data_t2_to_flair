@@ -35,3 +35,8 @@
 - 决定：IEEE TMI 格式的论文（LaTeX、refs.bib、作图脚本、生成的图 PDF、作图用的小 JSON）放在 paper/；编译产物在 paper/build/，不进 git。
 - 理由：课程要求 TMI 论文；初步报告 v0 从现在开始就作为论文骨架，和代码、结果放在同一个版本里。
 - 影响：tools/project.py 的 ROOT_DIRS 加入 paper；论文里的数字只能来自 result.json、manifest 或已核对的文献。
+
+## D-006 检查点规则、主终点与病灶计数（2026-11-26）
+- 决定：所有模型（生成器、分割器、基线）评测都用固定训练量的最后一步 last.pt，不按 main_val 挑；每个假设一个主终点加非劣效界限（H1 假阳性体积 / PSNR −0.5 dB；H2 漏检率 / 假阳性体积 +10%），Holm 校正，其余探索性；HD95 空预测记 373.13；新增编造病灶数、漏检病灶数，小病灶召回降为探索性。
+- 理由：论文 v0 的对抗审稿指出 main_val 同时用于挑检查点和报告会偏乐观（真实 FLAIR 参考尤甚），按 PSNR 挑偏向模糊；胶质瘤的小连通域多为卫星灶；HD95 的 nan 会悄悄丢受试者。
+- 影响：trunk.yaml 增加 infer.ckpt、seg.ckpt 和 eval 阈值；best.pt 只作诊断；新增 t2flair.compare；界限在各卡片中最终确定。

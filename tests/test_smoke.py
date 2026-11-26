@@ -54,6 +54,11 @@ def test_end_to_end(tmp_path):
     assert result["eval_set"] == "main_val"
     assert result["metrics"]["model"]["psnr"]["n"] == 2
     assert "dice" in result["baseline"]["upper_bound_real_flair"]
+    assert result["checkpoints"]["model"]["ckpt"] == "last" and "fp_lesions" in result["metrics"]["model"]
+    run("compare", "pair", "--a", str(out), "--b", str(out), "--b-key", "identity", "--name", "model_vs_identity",
+        "--primary", "psnr:higher", "--noninf", "fp_volume:lower:10%", "--metrics", "empty_slice_false_alarm",
+        "--into", str(out), env=env)
+    assert "model_vs_identity" in json.loads(out.read_text())["comparisons"]
     run("figures", "--steps", "3", "--out", str(tmp_path / "figs"), *common, env=env)
     assert (tmp_path / "figs" / "train_curve.png").exists() and (tmp_path / "figs" / "val_samples.png").exists()
     log = (ROOT / "scratch" / "smoke" / EXP / "model" / "log.jsonl").read_text().splitlines()
