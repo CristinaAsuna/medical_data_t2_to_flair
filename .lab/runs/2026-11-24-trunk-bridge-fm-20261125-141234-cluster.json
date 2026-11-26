@@ -10,8 +10,9 @@
   "command": "sbatch -p bme_a10080g --gres=gpu:NVIDIAA10080GBPCIe:1 -t 16:00:00 -J t2f-trunk scratch/slurm/t2f-trunk.sbatch \"train --config configs/trunk.yaml\" \"train_seg --role s_eval\" \"train_seg --role s_train\"",
   "commit": "8074cf802bdbafc5a64921fce17b2ae15e34808a",
   "started": "2026-11-25T14:12:36",
-  "ended": null,
-  "status": "running",
+  "ended": "2026-11-26T10:20:31",
+  "status": "done",
   "job": "4363186",
-  "note": null
+  "note": null,
+  "outputs": "cluster:/public_bme2/bme-cuizhm/maxquan/Projects/medical_data_t2_to_flair/runs/2026-11-24-trunk-bridge-fm/"
 }
