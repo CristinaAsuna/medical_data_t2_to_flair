@@ -20,7 +20,7 @@ F1 端到端在 main_val 上的 PSNR，以及病灶 Dice 与上界的差各是�
 1. ablation：F0（从噪声出发）vs F1
 2. ablation：F1 + 病灶加权（α=5）
 3. ablation：F1 + 分割一致性
-4. 基线：SelfRDB 在 main 划分上重训并与三种方法配对比较；卡片 experiments/2026-11-27-baseline-selfrdb/CARD.md 官方环境已完成导入验证，待 A100 smoke 确认。
+4. 基线：SelfRDB 在 main 划分上重训并配对比较（CARD.md 已批准）。A100 smoke `4366755` 通过（1.542 it/s，13.46 GiB，50k≈9.0h）；正式作业 `4366827` 已提交 `bme_a10080g`（run_id `2026-11-27-baseline-selfrdb-20261127-163109-cluster`，含 50k 训练→推理→评测→4 组配对对比→出图）。
 
 数据与环境：BraTS 2021 tar 和 LPIPS AlexNet 权重已在 cluster 共享目录登记（见 MACHINES.md）。作业 `4362829` 完成 main 预处理，manifest 验收通过（300/30/100，最大肿瘤裁剪损失 0）。
 

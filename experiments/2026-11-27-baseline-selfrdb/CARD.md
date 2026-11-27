@@ -1,6 +1,6 @@
 # 2026-11-27-baseline-selfrdb
 
-类型：ablation（外部方法基线）　状态：queued（2026-11-27 用户批准）
+类型：ablation（外部方法基线）　状态：running（2026-11-27 用户批准）
 
 ## 问题
 同一 BraTS main 划分上从头训练 SelfRDB 后，其病灶 Dice 相对 F1@50k 如何？与 UNet-L1、pix2pix 和续训后的 F1@80k 在图像、病灶指标及计算成本上各差多少？
