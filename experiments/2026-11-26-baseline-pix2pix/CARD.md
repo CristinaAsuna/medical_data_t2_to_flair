@@ -1,6 +1,6 @@
 # 2026-11-26-baseline-pix2pix
 
-类型：ablation（基线）　状态：queued（2026-11-26 用户批准开卡；提前于主干锁定，见 STATE.md）
+类型：ablation（基线）　状态：running（2026-11-26 用户批准开卡；已评测，待核对）
 
 ## 问题
 在 UNet-L1 的基础上加 pix2pix 的对抗项（条件 PatchGAN，L1 权重 100），编造病灶数和 LPIPS 相对 UNet-L1 和 F1@50k 怎么变？
@@ -29,4 +29,5 @@ configs/exp/2026-11-26-baseline-pix2pix.yaml：`method.name: pix2pix`（生成�
 result.json；figures/val_samples.png；figures/train_curve.png；runs/<id>/model/checkpoints/last.pt 和 best.pt（诊断，含判别器状态）；推理缓存。
 
 ## 结果
-【运行后填写：数字、与主干的差、结论、这个实验不能说明什么】
+main_val 30 例配对，均为 50k 步。pix2pix 为 17.660 dB / LPIPS 0.1212 / Dice 0.7807。每例编造病灶数 1.567；相对 UNet-L1 差 +0.500（95% CI [−0.200, 1.233]，Holm p=0.381），相对 F1@50k 差 −0.267（[−1.800, 0.933]，Holm p=0.950）。
+主终点未成立，且 LPIPS 比 UNet-L1 差 0.0186（95% CI [0.0138, 0.0232]），触发推翻条件。报告观察值，本协议结果不支持“对抗训练会编造结构”的论断。

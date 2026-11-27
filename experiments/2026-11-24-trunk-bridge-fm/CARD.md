@@ -34,4 +34,4 @@ F1 桥式 FM 端到端（预处理 → 训练 → 50 步推理 → 唯一评测�
 result.json；figures/val_samples.png；figures/train_curve.png；checkpoints/last.pt 和 best.pt（F1、S_train、S_eval 各一套，放在各自的 run 目录）；F1 的 checkpoints/step50k.pt（约 1 GB）；runs/<id>/samples/val-steps50-seed0/（推理缓存，供后续 analysis 复用）。
 
 ## 结果
-【运行后填写：数字、与主干的差、结论、这个实验不能说明什么】
+作业 4363758 在 main_val 完成。F1@80k 的 PSNR 19.135 dB，恒等 11.901 dB（+7.234 dB）；病灶 Dice 0.8288，真实 FLAIR 参考 0.8383（差 −0.0095）。F1@50k 为 18.939 dB / 0.8192。三例样图保留了主要病灶位置，仍可见边界和脑室误差；达到本卡可信门槛，待用户核对锁定。结果限于 main_val 的病例和 S_eval 协议。

@@ -1,6 +1,6 @@
 # 2026-11-26-baseline-unet-l1
 
-类型：ablation（基线）　状态：queued（2026-11-26 用户批准开卡；提前于主干锁定，见 STATE.md）
+类型：ablation（基线）　状态：running（2026-11-26 用户批准开卡；已评测，待核对）
 
 ## 问题
 同一个 UNet、同样 50k 步，只把训练目标换成从 T2 直接 L1 回归 FLAIR（一步出图），在 main_val 上相对 F1@50k 的 PSNR、LPIPS、漏检率和编造病灶数各差多少？
@@ -29,4 +29,5 @@ configs/exp/2026-11-26-baseline-unet-l1.yaml：`method.name: regression`（网�
 result.json；figures/val_samples.png；figures/train_curve.png；runs/<id>/model/checkpoints/last.pt 和 best.pt（诊断）；推理缓存。
 
 ## 结果
-【运行后填写：数字、与主干的差、结论、这个实验不能说明什么】
+main_val 30 例配对，均为 50k 步。UNet-L1 为 19.398 dB / LPIPS 0.1027 / Dice 0.8252，F1 为 18.939 dB / 0.0822 / 0.8192。F1−UNet-L1 的 PSNR 差 −0.458 dB（95% CI [−0.811, −0.082]），单侧下界 −0.759 dB，未过 −0.5 dB 非劣效界；LPIPS 差 −0.0205（95% CI [−0.0259, −0.0149]）。
+假阳性体积、漏检率及漏检病灶数的配对 CI 均含 0；漏检率和病灶计数的均值方向不同。两条预设走向均缺足够证据。结果为本协议探索性比较，见 result.json。
