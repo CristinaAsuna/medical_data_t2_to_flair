@@ -1,0 +1,17 @@
+{
+  "run_id": "2026-11-27-baseline-selfrdb-20261127-200750-cluster",
+  "exp": "2026-11-27-baseline-selfrdb",
+  "repo": "medical_data_t2_to_flair",
+  "project": ".",
+  "machine": "cluster",
+  "host": "bme_login2",
+  "run_dir": "/public_bme2/bme-cuizhm/maxquan/Projects/medical_data_t2_to_flair/runs/2026-11-27-baseline-selfrdb/2026-11-27-baseline-selfrdb-20261127-200750-cluster",
+  "code_dir": "/public_bme2/bme-cuizhm/maxquan/Projects/medical_data_t2_to_flair/runs/2026-11-27-baseline-selfrdb/2026-11-27-baseline-selfrdb-20261127-200750-cluster/code",
+  "command": "sbatch -p bme_a10080g --gres=gpu:NVIDIAA10080GBPCIe:1 -J selfrdb-50k tools/jobs/selfrdb-train.sbatch",
+  "commit": "953393a4526ef8ab5abc899b265e48737eb985e2",
+  "started": "2026-11-27T20:07:56",
+  "ended": null,
+  "status": "running",
+  "job": null,
+  "note": null
+}
