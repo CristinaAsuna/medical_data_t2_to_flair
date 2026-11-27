@@ -1,0 +1,13 @@
+exp: 2026-11-27-baseline-selfrdb
+method:
+  name: selfrdb
+  sigma: 1.0  # upstream SelfRDB gamma=1; distinguishes the sample cache key
+train:
+  steps: 50000
+  batch_size: 4
+  lr: 0.00016
+  val_every: 5000
+infer:
+  steps: 10
+  seed: 0
+  ckpt: last

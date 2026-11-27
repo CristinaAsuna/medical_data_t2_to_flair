@@ -8,6 +8,10 @@
 set -euo pipefail
 source tools/env.sh
 module load compiler/gcc/7.3.1 cuda/7/11.8
+export CC="$(command -v gcc)"
+export CXX="$(command -v g++)"
+export CUDAHOSTCXX="$CXX"
+unset SLURM_NTASKS
 export PATH="/public_bme2/bme-cuizhm/maxquan/envs/selfrdb/bin:$PATH"
 export TORCH_EXTENSIONS_DIR="${SLURM_TMPDIR:-/tmp}/selfrdb-ext-${SLURM_JOB_ID}"
 export MAX_JOBS=2
