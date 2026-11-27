@@ -10,8 +10,9 @@
   "command": "sbatch -p bme_a10080g --gres=gpu:NVIDIAA10080GBPCIe:1 -J selfrdb-50k tools/jobs/selfrdb-train.sbatch",
   "commit": "f7c9c3d0b87c896a42df6318f5432f14893cd573",
   "started": "2026-11-27T16:31:13",
-  "ended": null,
-  "status": "running",
+  "ended": "2026-11-27T20:07:43",
+  "status": "failed",
   "job": null,
-  "note": null
+  "note": null,
+  "outputs": "failed at step 1 in job 4366827 (SelfRDBCallback.log shadowed by Lightning)"
 }
