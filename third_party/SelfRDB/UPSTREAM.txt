@@ -1,0 +1,3 @@
+https://github.com/icon-lab/SelfRDB
+commit: 6262edeff9ca7afe14c55e226db5cb23411f55d9
+snapshot: git archive HEAD
