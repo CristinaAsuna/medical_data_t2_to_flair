@@ -9,6 +9,7 @@ present, and logs val-subset brain-mask PSNR in the same schema as t2flair.train
 """
 import argparse
 import sys
+import time
 from pathlib import Path
 from time import perf_counter
 
@@ -96,7 +97,7 @@ class SelfRDBCallback(L.Callback):
         self.target_steps = int(target_steps)
         self.val_batch = int(val_batch)
         self.resume_state = resume_state
-        self.log = JsonlLog(run / "log.jsonl")
+        self.jsonl = JsonlLog(run / "log.jsonl")
         self.elapsed_offset = float(resume_state.get("elapsed_sec", 0.0)) if resume_state else 0.0
         self.t0 = None
         self.last_saved_step = int(resume_state["step"]) if resume_state else 0
@@ -106,6 +107,7 @@ class SelfRDBCallback(L.Callback):
 
     def on_train_start(self, trainer, pl_module):
         self.t0 = perf_counter()
+        self.jsonl.start = time.time() - self.elapsed_offset
         if self.resume_state is not None:
             trainer.optimizers[0].load_state_dict(self.resume_state["opt_g"])
             trainer.optimizers[1].load_state_dict(self.resume_state["opt_d"])
@@ -144,10 +146,7 @@ class SelfRDBCallback(L.Callback):
         }
         improved = artifacts.save_checkpoint(self.run, state, metric=val_psnr, lower_is_better=False)
         self.last_saved_step = g_step
-        rec = {"event": "val", "step": g_step, "val_psnr": round(val_psnr, 4),
-               "best": bool(improved), "time": round(elapsed, 1)}
-        self.log.write(rec)
-        print(rec, flush=True)
+        self.jsonl.write(event="val", step=g_step, val_psnr=round(val_psnr, 4), best=bool(improved))
 
     def on_train_batch_end(self, trainer, pl_module, outputs, batch, batch_idx):
         metrics = trainer.callback_metrics
@@ -159,19 +158,16 @@ class SelfRDBCallback(L.Callback):
         g_step = int(trainer.global_step) // 2
         t = self.cfg["train"]
         if g_step == 1 or g_step % t["log_every"] == 0 or g_step == self.target_steps:
-            rec = {
-                "event": "train",
-                "step": g_step,
-                "loss": round(float(metrics["g_loss/total"].item()), 6),
-                "g_rec": round(float(metrics["g_loss/rec"].item()), 6),
-                "g_adv": round(float(metrics["g_loss/adv"].item()), 6),
-                "d_loss": round(float(metrics["d_loss"].item()), 6),
-                "lr_g": float(trainer.optimizers[0].param_groups[0]["lr"]),
-                "lr_d": float(trainer.optimizers[1].param_groups[0]["lr"]),
-                "time": round(self._elapsed(), 1),
-            }
-            self.log.write(rec)
-            print(rec, flush=True)
+            self.jsonl.write(
+                event="train",
+                step=g_step,
+                loss=round(float(metrics["g_loss/total"].item()), 6),
+                g_rec=round(float(metrics["g_loss/rec"].item()), 6),
+                g_adv=round(float(metrics["g_loss/adv"].item()), 6),
+                d_loss=round(float(metrics["d_loss"].item()), 6),
+                lr_g=float(trainer.optimizers[0].param_groups[0]["lr"]),
+                lr_d=float(trainer.optimizers[1].param_groups[0]["lr"]),
+            )
 
         if g_step % t["val_every"] == 0 or g_step == self.target_steps:
             self._save_and_eval(trainer, pl_module, g_step)
