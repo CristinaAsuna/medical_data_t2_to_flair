@@ -4,3 +4,5 @@ exp: 2026-11-28-f0-noise-start
 method:
   name: noise_fm
   sigma: 0.0                # F0 不用 σ；只用于区分推理缓存的键
+train:
+  swanlab: local            # 本地离线监控，写入 runs/<exp>/model/swanlog/

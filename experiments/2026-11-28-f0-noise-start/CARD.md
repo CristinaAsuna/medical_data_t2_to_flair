@@ -29,7 +29,7 @@ F0 对 UNet-L1、pix2pix 的比较及其余指标均为探索性。
 1×A100 80G（bme_a10080g）。网络与 F1 相同，按 1.36 it/s 计 50k 步约 10.2 h，推理与评测约 1 h，合计约 12 GPU 小时。存储上限 5 GB。超过 18 h、出现 NaN 或 val_psnr 在 20k 步仍不比恒等基线高 3 dB 就停下来问。
 
 ## 要保存的产物
-result.json；figures/val_samples.png；figures/train_curve.png；runs/<id>/model/checkpoints/last.pt 和 best.pt（诊断）；main_val 推理缓存（50 步，seed 0）。
+result.json；figures/val_samples.png；figures/train_curve.png；runs/<id>/model/{checkpoints/{last,best}.pt,swanlog/}；main_val 推理缓存（50 步，seed 0）。
 
 ## 结果
 【运行后填写：数字、与主干的差、结论、这个实验不能说明什么】

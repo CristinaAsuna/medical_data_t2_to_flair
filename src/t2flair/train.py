@@ -91,6 +91,13 @@ def main():
         print("resumed from step", step, flush=True)
     log.write(event="start", step=step, train_slices=len(data), params=count_params(model), device=str(dev))
 
+    swan = None
+    swan_mode = t.get("swanlab")
+    if swan_mode:
+        import swanlab
+        swan = swanlab.init(project="t2-to-flair", experiment_name=cfg["exp"], config=cfg,
+                            mode=str(swan_mode), logdir=str(run / "swanlog"))
+
     def checkpoint():
         score = validate(ema, subset, cfg, dev)
         state = {"model": model.state_dict(), "ema": ema.state_dict(), "opt": opt.state_dict(),
@@ -99,43 +106,54 @@ def main():
             state.update(disc=disc.state_dict(), opt_d=opt_d.state_dict())
         improved = artifacts.save_checkpoint(run, state, metric=score, lower_is_better=False)
         log.write(event="val", step=step, val_psnr=round(score, 4), best=improved)
+        if swan is not None:
+            swan.log({"val/psnr": round(score, 4), "val/best": int(improved)}, step=step)
 
     batches = infinite(loader)
     model.train()
     running = []
-    while step < t["steps"]:
-        batch = to_device(next(batches), dev)
-        with torch.autocast(dev.type, dtype=torch.bfloat16, enabled=t["bf16"] and dev.type == "cuda"):
-            if method == "bridge":
-                loss = bridge.training_loss(model, batch, cfg["method"]["sigma"])
-            elif method == "noise_fm":
-                loss = bridge.noise_training_loss(model, batch)
-            elif method == "regression":
-                loss, _ = baselines.regression_loss(model, batch)
-            else:
-                loss, parts = baselines.pix2pix_step(model, disc, opt_d, batch, cfg["method"].get("l1_weight", 100.0))
-        if not torch.isfinite(loss):
-            log.write(event="nan", step=step)
-            raise FloatingPointError("non-finite loss at step %d" % step)
-        opt.zero_grad(set_to_none=True)
-        loss.backward()
-        torch.nn.utils.clip_grad_norm_(model.parameters(), t["grad_clip"])
-        opt.step()
-        sched.step()
-        with torch.no_grad():
-            for p_ema, p in zip(ema.parameters(), model.parameters()):
-                p_ema.lerp_(p, 1.0 - t["ema"])
-            for b_ema, b in zip(ema.buffers(), model.buffers()):
-                b_ema.copy_(b)
-        step += 1
-        running.append(loss.item())
-        if step % t["log_every"] == 0:
-            extra = {k: round(v, 5) for k, v in parts.items()} if method == "pix2pix" else {}
-            log.write(event="train", step=step, loss=round(float(np.mean(running)), 6), lr=sched.get_last_lr()[0], **extra)
-            running = []
-        if step % t["val_every"] == 0 or step == t["steps"]:
-            checkpoint()
-    log.write(event="done", step=step)
+    try:
+        while step < t["steps"]:
+            batch = to_device(next(batches), dev)
+            with torch.autocast(dev.type, dtype=torch.bfloat16, enabled=t["bf16"] and dev.type == "cuda"):
+                if method == "bridge":
+                    loss = bridge.training_loss(model, batch, cfg["method"]["sigma"])
+                elif method == "noise_fm":
+                    loss = bridge.noise_training_loss(model, batch)
+                elif method == "regression":
+                    loss, _ = baselines.regression_loss(model, batch)
+                else:
+                    loss, parts = baselines.pix2pix_step(model, disc, opt_d, batch, cfg["method"].get("l1_weight", 100.0))
+            if not torch.isfinite(loss):
+                log.write(event="nan", step=step)
+                raise FloatingPointError("non-finite loss at step %d" % step)
+            opt.zero_grad(set_to_none=True)
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), t["grad_clip"])
+            opt.step()
+            sched.step()
+            with torch.no_grad():
+                for p_ema, p in zip(ema.parameters(), model.parameters()):
+                    p_ema.lerp_(p, 1.0 - t["ema"])
+                for b_ema, b in zip(ema.buffers(), model.buffers()):
+                    b_ema.copy_(b)
+            step += 1
+            running.append(loss.item())
+            if step % t["log_every"] == 0:
+                loss_mean = round(float(np.mean(running)), 6)
+                lr_now = sched.get_last_lr()[0]
+                extra = {k: round(v, 5) for k, v in parts.items()} if method == "pix2pix" else {}
+                log.write(event="train", step=step, loss=loss_mean, lr=lr_now, **extra)
+                if swan is not None:
+                    swan.log({"train/loss": loss_mean, "train/lr": lr_now,
+                              **{"train/" + k: v for k, v in extra.items()}}, step=step)
+                running = []
+            if step % t["val_every"] == 0 or step == t["steps"]:
+                checkpoint()
+        log.write(event="done", step=step)
+    finally:
+        if swan is not None:
+            swan.finish()
 
 
 if __name__ == "__main__":
