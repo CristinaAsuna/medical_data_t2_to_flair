@@ -13,7 +13,7 @@
 
 ## 当前唯一问题
 
-F0（从噪声出发的条件 FM）相对主干 F1@50k 在假阳性体积（H1 主终点）与 PSNR（−0.5 dB 非劣效）上怎么变？→ 卡片：experiments/2026-11-28-f0-noise-start/CARD.md（queued）
+F0（从噪声出发的条件 FM）相对主干 F1@50k 在假阳性体积（H1 主终点）与 PSNR（−0.5 dB 非劣效）上怎么变？→ 卡片：experiments/2026-11-28-f0-noise-start/CARD.md（running）
 
 ## 排队（最多 5 项）
 
@@ -27,7 +27,7 @@ F0（从噪声出发的条件 FM）相对主干 F1@50k 在假阳性体积（H1 �
 
 - 四张初始卡片（F1、UNet-L1、pix2pix、SelfRDB）均已核对结案为 `done`，`trunk-v1` 已锁定。
 - 已生成四项实验的 `tools/project.py audit` 清单，待用户确认后按需清理冗余产物。
-- F0 卡片已开（终点预测，代码与测试已提交），用户过目预测后在 bme_a10080g 提交；`main_test` 继续冻结。
+- F0 正式作业 `4369469` 已在 `bme_a10080g`（`bme_gpu21`）开跑（run_id `2026-11-28-f0-noise-start-20261128-100119-cluster`，含 50k 训练 + 本地 SwanLab 监控→推理→评测→配对比较→出图，预计 11-28 21:30 完成）；`main_test` 继续冻结。
 
 ## 搁置的想法
 
