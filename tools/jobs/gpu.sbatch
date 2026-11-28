@@ -9,8 +9,8 @@
 #SBATCH -t 48:00:00
 #SBATCH -o scratch/slurm/%x-%j.out
 #SBATCH -e scratch/slurm/%x-%j.err
-set -euo pipefail
 source ~/.bashrc >/dev/null 2>&1 || true
+set -euo pipefail
 source tools/env.sh
 source /public_bme2/bme-cuizhm/maxquan/envs/t2flair/bin/activate
 echo "node ${SLURM_JOB_NODELIST:-local} start $(date)"
