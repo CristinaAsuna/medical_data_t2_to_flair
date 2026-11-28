@@ -40,3 +40,8 @@
 - 决定：所有模型（生成器、分割器、基线）评测都用固定训练量的最后一步 last.pt，不按 main_val 挑；每个假设一个主终点加非劣效界限（H1 假阳性体积 / PSNR −0.5 dB；H2 漏检率 / 假阳性体积 +10%），Holm 校正，其余探索性；HD95 空预测记 373.13；新增编造病灶数、漏检病灶数，小病灶召回降为探索性。
 - 理由：论文 v0 的对抗审稿指出 main_val 同时用于挑检查点和报告会偏乐观（真实 FLAIR 参考尤甚），按 PSNR 挑偏向模糊；胶质瘤的小连通域多为卫星灶；HD95 的 nan 会悄悄丢受试者。
 - 影响：trunk.yaml 增加 infer.ckpt、seg.ckpt 和 eval 阈值；best.pt 只作诊断；新增 t2flair.compare；界限在各卡片中最终确定。
+
+## D-007 锁定主干 trunk-v1（2026-11-28）
+- 决定：以 F1 桥式 FM 锁定主干 `trunk-v1`（评测提交 `4d0e68d`，configs/trunk.yaml 保留 50k 步作消融默认预算；主干归档 80k `last.pt` 与 50k `step50k.pt` 两套检查点）。
+- 理由：`2026-11-24-trunk-bridge-fm` 在 main_val 达标（F1@80k PSNR 19.135 dB 较恒等 +7.234 dB，S_eval 真实参考 Dice 0.8383 ≥0.80，F1 Dice 0.8288 差 −0.0095，样图目视合理）；F1@50k 显著优于 SelfRDB@50k（Dice +0.0377）和 pix2pix@50k。
+- 影响：四张初始主干/基线卡片结案为 done；后续消融（F0、病灶加权、分割一致性）均以 `trunk-v1` 的 50k 预算对照 `step50k.pt` 展开，main_test 继续冻结。

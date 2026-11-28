@@ -1,6 +1,6 @@
 # 2026-11-27-baseline-selfrdb
 
-类型：ablation（外部方法基线）　状态：running（2026-11-27 用户批准）
+类型：ablation（外部方法基线）　状态：done（2026-11-27 批准；2026-11-28 核对完成）
 
 ## 问题
 同一 BraTS main 划分上从头训练 SelfRDB 后，其病灶 Dice 相对 F1@50k 如何？与 UNet-L1、pix2pix 和续训后的 F1@80k 在图像、病灶指标及计算成本上各差多少？
@@ -31,4 +31,6 @@ SelfRDB−F1@50k 的 Dice 点估计 ≤0 即推翻方向预测。点估计和区
 result.json（含各对照的逐病例配对统计）、figures/train_curve.png、figures/val_samples.png；runs/<id>/ 下的 last.pt、best.pt（诊断）、训练日志和 main_val 推理缓存。
 
 ## 结果
-待运行。
+作业 4368126 在 main_val 30 例完成（50k 更新/bs 4，训练 7.40h，推理 7.53min，10 步/20.0 NFE）。SelfRDB 为 PSNR 17.269 dB、SSIM 0.6013、LPIPS 0.1177、Dice 0.7815、假阳性体积 3204、编造病灶 4.70。
+主比较 SelfRDB−F1@50k（Dice 0.8192）配对差 −0.0377（95% CI [−0.0635, −0.0091]，p=7.06e-5），CI 上界 <0：推翻方向预测，报告 F1@50k 在本验证集上的病灶 Dice 优势（相对 UNet-L1 差 −0.0436、F1@80k 差 −0.0473、pix2pix 差 +0.0009）。
+局限：SelfRDB 有效 batch 4（20 万切片≈6.5 epoch，单层 2D）远小于 F1/基线的 batch 64（320 万切片，2.5D），50k 处 val_psnr 仍达高点 18.25 dB；结果仅说明相近墙钟/50k 更新预算下的比较，不代表训满 50 epoch 的极限。

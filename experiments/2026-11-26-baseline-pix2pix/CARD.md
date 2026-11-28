@@ -1,6 +1,6 @@
 # 2026-11-26-baseline-pix2pix
 
-类型：ablation（基线）　状态：running（2026-11-26 用户批准开卡；已评测，待核对）
+类型：ablation（基线）　状态：done（2026-11-26 批准；2026-11-28 核对完成）
 
 ## 问题
 在 UNet-L1 的基础上加 pix2pix 的对抗项（条件 PatchGAN，L1 权重 100），编造病灶数和 LPIPS 相对 UNet-L1 和 F1@50k 怎么变？
