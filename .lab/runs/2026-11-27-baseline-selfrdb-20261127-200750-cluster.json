@@ -10,8 +10,9 @@
   "command": "sbatch -p bme_a10080g --gres=gpu:NVIDIAA10080GBPCIe:1 -J selfrdb-50k tools/jobs/selfrdb-train.sbatch",
   "commit": "953393a4526ef8ab5abc899b265e48737eb985e2",
   "started": "2026-11-27T20:07:56",
-  "ended": null,
-  "status": "running",
+  "ended": "2026-11-28T09:21:45",
+  "status": "done",
   "job": null,
-  "note": null
+  "note": null,
+  "outputs": "cluster:/public_bme2/bme-cuizhm/maxquan/Projects/medical_data_t2_to_flair/runs/2026-11-27-baseline-selfrdb/model ; samples cluster:runs/_cache/samples/c895502fad27 ; job 4368126"
 }
