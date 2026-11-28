@@ -1,0 +1,17 @@
+{
+  "run_id": "2026-11-28-f0-noise-start-20261128-100119-cluster",
+  "exp": "2026-11-28-f0-noise-start",
+  "repo": "medical_data_t2_to_flair",
+  "project": ".",
+  "machine": "cluster",
+  "host": "bme_login2",
+  "run_dir": "/public_bme2/bme-cuizhm/maxquan/Projects/medical_data_t2_to_flair/runs/2026-11-28-f0-noise-start/2026-11-28-f0-noise-start-20261128-100119-cluster",
+  "code_dir": "/public_bme2/bme-cuizhm/maxquan/Projects/medical_data_t2_to_flair/runs/2026-11-28-f0-noise-start/2026-11-28-f0-noise-start-20261128-100119-cluster/code",
+  "command": "sbatch -p bme_a10080g --gres=gpu:NVIDIAA10080GBPCIe:1 -t 24:00:00 -J f0-50k tools/jobs/gpu.sbatch train+infer+eval+compare+figures",
+  "commit": "7fb68f55c4fddd74cf4589b6d89a2739802f5e0d",
+  "started": "2026-11-28T10:01:22",
+  "ended": null,
+  "status": "running",
+  "job": null,
+  "note": null
+}
