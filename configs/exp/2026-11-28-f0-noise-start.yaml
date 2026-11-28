@@ -1,0 +1,6 @@
+# 消融 F0（卡片 experiments/2026-11-28-f0-noise-start）：只把起点从 T2 换成高斯噪声（直线路径，确定性 Euler），
+# 网络、2.5D 条件、终点预测 MSE、50k 步、推理 50 步和评测都同 configs/trunk.yaml。
+exp: 2026-11-28-f0-noise-start
+method:
+  name: noise_fm
+  sigma: 0.0                # F0 不用 σ；只用于区分推理缓存的键

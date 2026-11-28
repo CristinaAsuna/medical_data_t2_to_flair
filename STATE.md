@@ -13,13 +13,13 @@
 
 ## 当前唯一问题
 
-待开下一张卡片：F0（从噪声出发的条件 FM）相对主干 F1@50k 在假阳性体积（H1 主终点）与 PSNR（−0.5 dB 非劣效）上怎么变？
+F0（从噪声出发的条件 FM）相对主干 F1@50k 在假阳性体积（H1 主终点）与 PSNR（−0.5 dB 非劣效）上怎么变？→ 卡片：experiments/2026-11-28-f0-noise-start/CARD.md（queued）
 
 ## 排队（最多 5 项）
 
-1. ablation：F0（从噪声出发）vs F1@50k（检验 H1）
-2. ablation：F1 + 病灶加权（α=5，检验 H2）
-3. ablation：F1 + 分割一致性（冻结 S_train，t>0.5，检验 H1/H2）
+1. ablation：F1 + 病灶加权（α=5，检验 H2）
+2. ablation：F1 + 分割一致性（冻结 S_train，t>0.5，检验 H1/H2）
+3. 按 UNet-L1 卡片的决定，病灶感知改动也要加在 UNet-L1 上做对照（各一张卡片）
 
 数据与环境：BraTS 2021 tar 与 LPIPS AlexNet 权重已在 cluster 共享目录登记（MACHINES.md）；`main` 预处理完成（300/30/100，最大肿瘤裁剪损失 0）；SelfRDB 独立环境在 `cluster:/public_bme2/bme-cuizhm/maxquan/envs/selfrdb`。
 
@@ -27,7 +27,7 @@
 
 - 四张初始卡片（F1、UNet-L1、pix2pix、SelfRDB）均已核对结案为 `done`，`trunk-v1` 已锁定。
 - 已生成四项实验的 `tools/project.py audit` 清单，待用户确认后按需清理冗余产物。
-- 待用户批准后用 `tools/project.py new` 开 F0 消融卡片并进入下一轮实验；`main_test` 继续冻结。
+- F0 卡片已开（终点预测，代码与测试已提交），用户过目预测后在 bme_a10080g 提交；`main_test` 继续冻结。
 
 ## 搁置的想法
 

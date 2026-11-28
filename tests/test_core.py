@@ -93,6 +93,22 @@ def test_sampler_marginal_matches_training_interpolation():
     assert abs(seen.var().item() - sigma ** 2 * t * (1 - t)) < 0.003
 
 
+def test_noise_fm_path_and_sampler():
+    """F0: t=0 is pure noise, t=1 the target; with an exact x_hat the Euler sampler lands on x and,
+    at an intermediate step, sits on the training path (1 - t) eps + t x."""
+    x, noise = torch.ones(2, 1, 4, 4), torch.randn(2, 1, 4, 4)
+    assert torch.allclose(bridge.noise_interpolate(x, torch.zeros(2), noise), noise)
+    assert torch.allclose(bridge.noise_interpolate(x, torch.ones(2), noise), x)
+    n, steps = 20000, 10
+    x = torch.full((n, 1, 1, 1), 0.4)
+    oracle = Oracle(x, watch_t=0.6)
+    out = bridge.noise_sample(oracle, x, None, steps, torch.Generator().manual_seed(0))
+    assert torch.allclose(out, x)
+    seen = oracle.seen.flatten()
+    assert abs(seen.mean().item() - 0.6 * 0.4) < 0.01
+    assert abs(seen.var().item() - 0.4 ** 2) < 0.01
+
+
 def test_image_metrics():
     gt = np.random.default_rng(0).uniform(-1, 1, (3, 32, 32))
     mask = np.ones_like(gt, dtype=bool)

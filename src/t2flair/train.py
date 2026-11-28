@@ -55,7 +55,7 @@ def main():
     cfg = config.from_args(args)
     method = cfg["method"]["name"]
     if method not in baselines.METHODS:
-        raise NotImplementedError("method.name=%s (F0 is not implemented yet)" % method)
+        raise NotImplementedError("method.name=%s" % method)
     t = cfg["train"]
     seed_all(t["seed"])
     dev = device()
@@ -108,6 +108,8 @@ def main():
         with torch.autocast(dev.type, dtype=torch.bfloat16, enabled=t["bf16"] and dev.type == "cuda"):
             if method == "bridge":
                 loss = bridge.training_loss(model, batch, cfg["method"]["sigma"])
+            elif method == "noise_fm":
+                loss = bridge.noise_training_loss(model, batch)
             elif method == "regression":
                 loss, _ = baselines.regression_loss(model, batch)
             else:

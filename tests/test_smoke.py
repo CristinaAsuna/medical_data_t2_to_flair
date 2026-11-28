@@ -65,9 +65,9 @@ def test_end_to_end(tmp_path):
     assert any(json.loads(line).get("event") == "val" for line in log)
 
 
-@pytest.mark.parametrize("method", ["regression", "pix2pix"])
+@pytest.mark.parametrize("method", ["regression", "pix2pix", "noise_fm"])
 def test_baseline_end_to_end(tmp_path, method):
-    """Baselines share the trunk pipeline: train (and resume) -> infer (1 step) -> evaluate."""
+    """Baselines and F0 share the trunk pipeline: train (and resume) -> infer -> evaluate."""
     pytest.importorskip("diffusers")
     exp = "smoke-baseline-" + method
     shutil.rmtree(ROOT / "scratch" / "smoke" / exp, ignore_errors=True)
@@ -80,7 +80,8 @@ def test_baseline_end_to_end(tmp_path, method):
             arrays, _ = prep.process_arrays(*synthetic_volume(size=80, depth=12, seed=50 + 10 * n + j), crop=64)
             np.savez_compressed(processed / (subject + ".npz"), **arrays)
     env = dict(os.environ, PYTHONPATH=str(ROOT / "src"), PROJECT_RUNS_ROOT=str(tmp_path / "runs"))
-    sets = ["exp=%s" % exp, "method.name=%s" % method, "infer.steps=1", "data.processed=%s" % processed,
+    steps = "3" if method == "noise_fm" else "1"  # F0 integrates several Euler steps
+    sets = ["exp=%s" % exp, "method.name=%s" % method, "infer.steps=%s" % steps, "data.processed=%s" % processed,
             "data.splits=%s" % (tmp_path / "smoke"), "data.crop=64", "model.base_channels=16",
             "model.channel_mult=[1,2,2,4]", "model.layers_per_block=1", "model.attn_head_dim=8", "train.steps=4",
             "train.batch_size=4", "train.num_workers=0", "train.log_every=2", "train.val_every=2",
@@ -93,9 +94,9 @@ def test_baseline_end_to_end(tmp_path, method):
     common = ["--set", *sets, "train.steps=6", "--smoke"]
     run("train", *common, env=env)  # resumes (incl. discriminator) and continues to step 6
     run("train_seg", "--role", "s_eval", *common, env=env)
-    run("infer", "--split", "val", "--steps", "1", *common, env=env)
+    run("infer", "--split", "val", "--steps", steps, *common, env=env)
     out = tmp_path / "result.json"
-    run("evaluate", "--split", "val", "--steps", "1", "--out", str(out), *common, env=env)
+    run("evaluate", "--split", "val", "--steps", steps, "--out", str(out), *common, env=env)
     result = json.loads(out.read_text())
     assert result["checkpoints"]["model"] == {"ckpt": "last", "ckpt_step": 6}
     log = [json.loads(line) for line in (ROOT / "scratch" / "smoke" / exp / "model" / "log.jsonl").read_text().splitlines()]

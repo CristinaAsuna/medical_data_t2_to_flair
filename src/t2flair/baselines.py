@@ -2,9 +2,10 @@
 
 method.name (configs/exp/<id>.yaml):
   bridge      F1, Brownian-bridge FM from T2 (trunk; bridge.py)
+  noise_fm    F0, the same network and x-prediction loss started from Gaussian noise (bridge.py)
   regression  UNet-L1: the same Generator fed x_t = T2 and t = 0, one forward pass, L1 loss
   pix2pix     regression generator + conditional 70x70 PatchGAN (vanilla GAN loss + l1_weight * L1)
-The generator is identical in all three, so differences come from the training objective only.
+The generator is identical in all of them, so differences come from the training objective only.
 """
 import torch
 import torch.nn.functional as F
@@ -12,7 +13,7 @@ from torch import nn
 
 from . import bridge
 
-METHODS = ("bridge", "regression", "pix2pix")
+METHODS = ("bridge", "noise_fm", "regression", "pix2pix")
 
 
 def regress(model, source, cond):
@@ -25,6 +26,8 @@ def generate(model, source, cond, cfg, steps, generator=None):
     name = cfg["method"]["name"]
     if name == "bridge":
         return bridge.sample(model, source, cond, steps, cfg["method"]["sigma"], generator)
+    if name == "noise_fm":
+        return bridge.noise_sample(model, source, cond, steps, generator)
     if name in ("regression", "pix2pix"):
         return regress(model, source, cond).float().clamp(-1, 1)
     raise NotImplementedError("method.name=%s" % name)
